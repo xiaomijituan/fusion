@@ -1,0 +1,1062 @@
+{
+  "schemaVersion": 1,
+  "id": "fusion-default",
+  "version": "0.1.0",
+  "name": {
+    "zh": "聚变出厂剧本",
+    "en": "Fusion factory scenario"
+  },
+  "hosts": [
+    {
+      "id": "omarchy-1",
+      "role": {
+        "zh": "桌上 mini PC",
+        "en": "desk mini PC"
+      },
+      "place": {
+        "zh": "书桌",
+        "en": "desk"
+      }
+    },
+    {
+      "id": "omarchy-2",
+      "role": {
+        "zh": "柜子里的主机",
+        "en": "closet box"
+      },
+      "place": {
+        "zh": "机柜",
+        "en": "closet"
+      }
+    },
+    {
+      "id": "framework",
+      "role": {
+        "zh": "笔记本",
+        "en": "laptop"
+      },
+      "place": {
+        "zh": "膝上",
+        "en": "lap"
+      }
+    },
+    {
+      "id": "comet-a",
+      "role": {
+        "zh": "KVM 节点",
+        "en": "KVM node"
+      },
+      "place": {
+        "zh": "机架 A",
+        "en": "rack A"
+      }
+    },
+    {
+      "id": "comet-b",
+      "role": {
+        "zh": "KVM 节点",
+        "en": "KVM node"
+      },
+      "place": {
+        "zh": "机架 B",
+        "en": "rack B"
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "key": "presence",
+      "project": "campfire",
+      "title": {
+        "zh": "把 presence channel 抽成 concern",
+        "en": "Extract presence channel into a concern"
+      },
+      "lines": {
+        "zh": [
+          "读取 app/channels/presence_channel.rb",
+          "发现 3 个回调共用同一套心跳",
+          "起草 app/models/concerns/presence.rb",
+          "迁移 subscribed / unsubscribed hooks",
+          "旧路径上的 specs 仍然通过",
+          "等待：按 channel 类型拆，还是一个 concern？"
+        ],
+        "en": [
+          "Reading app/channels/presence_channel.rb",
+          "Found 3 callbacks sharing the same heartbeat",
+          "Drafting app/models/concerns/presence.rb",
+          "Moving subscribed / unsubscribed hooks",
+          "Specs still pass on the old path",
+          "Waiting: split by channel type, or one concern?"
+        ]
+      },
+      "question": {
+        "text": {
+          "zh": "这个 concern 快到 400 行了。按 channel 类型拆，还是留一个文件？",
+          "en": "This concern is heading toward 400 lines. Split by channel type, or keep one file?"
+        },
+        "options": [
+          {
+            "id": "split",
+            "label": {
+              "zh": "拆开",
+              "en": "Split it"
+            }
+          },
+          {
+            "id": "keep",
+            "label": {
+              "zh": "留一个文件",
+              "en": "Keep one file"
+            }
+          },
+          {
+            "id": "kill",
+            "label": {
+              "zh": "关掉",
+              "en": "Kill pane"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "key": "iso",
+      "project": "omarchy",
+      "title": {
+        "zh": "重写 ISO 构建脚本，改成流式日志",
+        "en": "Rewrite ISO builder to stream logs"
+      },
+      "lines": {
+        "zh": [
+          "分析 build.sh — 11 分钟，其中 4 分钟完全静默",
+          "用行缓冲 logger 替换 tee",
+          "mkarchiso 仍然吞掉 pacstrap 输出",
+          "修补 chroot hook",
+          "在 comet-a 上 dry-run 看起来干净",
+          "musl 测试镜像的 glibc pin 失败了"
+        ],
+        "en": [
+          "Profiling build.sh — 11 minutes, silent for 4 of them",
+          "Replacing tee with a line-buffered logger",
+          "mkarchiso still swallows pacstrap output",
+          "Patching the chroot hook",
+          "Dry-run on comet-a looks clean",
+          "musl test image failed the glibc pin"
+        ]
+      },
+      "question": {
+        "text": {
+          "zh": "musl 上测试失败。在 chroot 里钉死 glibc，还是跳过 musl 镜像？",
+          "en": "Tests fail on musl. Pin glibc in the chroot, or skip the musl image?"
+        },
+        "options": [
+          {
+            "id": "pin",
+            "label": {
+              "zh": "钉死 glibc",
+              "en": "Pin glibc"
+            }
+          },
+          {
+            "id": "skip",
+            "label": {
+              "zh": "跳过 musl",
+              "en": "Skip musl"
+            }
+          },
+          {
+            "id": "kill",
+            "label": {
+              "zh": "关掉",
+              "en": "Kill pane"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "key": "composer",
+      "project": "hey",
+      "title": {
+        "zh": "给写信框加上键盘快捷键",
+        "en": "Add keyboard shortcuts to the composer"
+      },
+      "lines": {
+        "zh": [
+          "梳理当前只能点的工具栏",
+          "在 Stimulus 里起草 keymap",
+          "Cmd-Enter 已经能发送 — 好",
+          "Vim 用户会恨用 Ctrl-K 插链接",
+          "尝试只在写信框里用 Space 当 leader",
+          "和格式栏的冲突还在"
+        ],
+        "en": [
+          "Mapping the current click-only toolbar",
+          "Drafting a keymap in Stimulus",
+          "Cmd-Enter already sends — good",
+          "Vim users will hate Ctrl-K for links",
+          "Trying Space as a leader in the composer only",
+          "Collision with the format bar remains"
+        ]
+      },
+      "question": {
+        "text": {
+          "zh": "快捷键和 Vim 冲突。写信框里用 Space 当 leader？",
+          "en": "The shortcut collides with Vim. Use Space as leader inside the composer?"
+        },
+        "options": [
+          {
+            "id": "space",
+            "label": {
+              "zh": "Space 当 leader",
+              "en": "Space leader"
+            }
+          },
+          {
+            "id": "alt",
+            "label": {
+              "zh": "继续用 Alt-",
+              "en": "Keep Alt-"
+            }
+          },
+          {
+            "id": "kill",
+            "label": {
+              "zh": "关掉",
+              "en": "Kill pane"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "key": "timezone",
+      "project": "once",
+      "title": {
+        "zh": "修日历时区漂移",
+        "en": "Fix calendar timezone drift"
+      },
+      "lines": {
+        "zh": [
+          "用 America/Sao_Paulo + 夏令时复现",
+          "全天事件存成 UTC 午夜",
+          "ICS 导出后客人那边错了一天",
+          "先写一条会失败的 spec",
+          "应该用 floating dates，不是带时区的 timestamp",
+          "需要决定全天事件和定时事件怎么分"
+        ],
+        "en": [
+          "Reproducing with America/Sao_Paulo + DST",
+          "All-day events stored as midnight UTC",
+          "ICS export shifts them a day for the guest",
+          "Writing a failing spec first",
+          "Floating dates, not zoned timestamps",
+          "Need a call on all-day vs timed events"
+        ]
+      },
+      "question": {
+        "text": {
+          "zh": "全天事件改存 floating dates，还是继续 UTC 并写进文档？",
+          "en": "Store all-day events as floating dates, or keep UTC and document the quirk?"
+        },
+        "options": [
+          {
+            "id": "float",
+            "label": {
+              "zh": "用 floating dates",
+              "en": "Floating dates"
+            }
+          },
+          {
+            "id": "utc",
+            "label": {
+              "zh": "继续 UTC",
+              "en": "Keep UTC"
+            }
+          },
+          {
+            "id": "kill",
+            "label": {
+              "zh": "关掉",
+              "en": "Kill pane"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "key": "packing",
+      "project": "physical",
+      "title": {
+        "zh": "设计新的装箱单 PDF",
+        "en": "Design the new packing slip PDF"
+      },
+      "lines": {
+        "zh": [
+          "阅读当前 Prawn 模板",
+          "仓库灯光下字太小",
+          "正文提到 11pt，保留品牌标记",
+          "二维码改到 SKU 区块上方",
+          "套装需要第二页",
+          "等你定折线位置"
+        ],
+        "en": [
+          "Reading the current Prawn template",
+          "Type is too small at warehouse light",
+          "Bumping body to 11pt, keeping the mark",
+          "QR now sits above the SKU block",
+          "Need a second page for kits",
+          "Waiting on the fold line"
+        ]
+      },
+      "question": {
+        "text": {
+          "zh": "套装一页放不下。允许第二张，还是把格子缩小？",
+          "en": "Kits overflow one page. Allow a second sheet, or shrink the grid?"
+        },
+        "options": [
+          {
+            "id": "page",
+            "label": {
+              "zh": "第二张",
+              "en": "Second sheet"
+            }
+          },
+          {
+            "id": "shrink",
+            "label": {
+              "zh": "缩小格子",
+              "en": "Shrink grid"
+            }
+          },
+          {
+            "id": "kill",
+            "label": {
+              "zh": "关掉",
+              "en": "Kill pane"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "key": "changelog",
+      "project": "omarchy",
+      "title": {
+        "zh": "根据已合并 PR 写本周 changelog",
+        "en": "Write the weekly changelog from merged PRs"
+      },
+      "lines": {
+        "zh": [
+          "收集周一以来的 27 个合并",
+          "分组：ISO、主题、硬件、文档",
+          "丢掉吵闹的依赖升级",
+          "Markdown 草稿，等 review",
+          "标题大小写跟上一期对齐",
+          "写完了，在 CHANGELOG.md 里"
+        ],
+        "en": [
+          "Collecting 27 merges since Monday",
+          "Grouping: ISO, theming, hardware, docs",
+          "Dropping the noisy dependency bumps",
+          "Draft in markdown, ready for review",
+          "Title case vs sentence case — matching the last one",
+          "Done. Sitting in CHANGELOG.md"
+        ]
+      },
+      "question": {
+        "text": {
+          "zh": "头条写硬件支持，还是 ISO 流式日志？",
+          "en": "Lead with hardware support, or with the ISO streaming logs?"
+        },
+        "options": [
+          {
+            "id": "hw",
+            "label": {
+              "zh": "硬件优先",
+              "en": "Hardware first"
+            }
+          },
+          {
+            "id": "iso",
+            "label": {
+              "zh": "ISO 优先",
+              "en": "ISO first"
+            }
+          },
+          {
+            "id": "kill",
+            "label": {
+              "zh": "关掉",
+              "en": "Kill pane"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "key": "lazygit",
+      "project": "dotfiles",
+      "title": {
+        "zh": "给 agent diff 接上 lazygit 和 gitsigns",
+        "en": "Wire lazygit + gitsigns for agent diffs"
+      },
+      "lines": {
+        "zh": [
+          "检查 LazyVim 的 git extra",
+          "gitsigns 已经开了 — hunk 预览正常",
+          "加一条能感知 pane 的 lazygit 命令",
+          "Diffview 和 agent 的 cwd 打架",
+          "把工作树钉到这个 pane 的仓库",
+          "可以开始 review 了"
+        ],
+        "en": [
+          "Checking LazyVim extra for git",
+          "gitsigns already on — hunk preview works",
+          "Adding a pane-aware lazygit command",
+          "Diffview was fighting the agent cwd",
+          "Pinned the working tree to the pane's repo",
+          "Ready for a review pass"
+        ]
+      },
+      "question": {
+        "text": {
+          "zh": "lazygit 开在 Herdr pane 里，还是浮在 Neovim 上？",
+          "en": "Open lazygit in a Herdr pane, or float it over Neovim?"
+        },
+        "options": [
+          {
+            "id": "pane",
+            "label": {
+              "zh": "独立 pane",
+              "en": "Own pane"
+            }
+          },
+          {
+            "id": "float",
+            "label": {
+              "zh": "浮在 nvim 上",
+              "en": "Float over nvim"
+            }
+          },
+          {
+            "id": "kill",
+            "label": {
+              "zh": "关掉",
+              "en": "Kill pane"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "key": "tailscale",
+      "project": "infra",
+      "title": {
+        "zh": "给 tailnet 上的 mini PC 起名",
+        "en": "Name the mini PCs on the tailnet"
+      },
+      "lines": {
+        "zh": [
+          "MagicDNS 已打开",
+          "comet-a / comet-b 已经能解析",
+          "omarchy-1 还是随机节点名",
+          "写一个小的 hostname unit",
+          "需要 ACL，只让笔记本 SSH 进去",
+          "等你定 tag"
+        ],
+        "en": [
+          "MagicDNS is on",
+          "comet-a / comet-b already resolve",
+          "omarchy-1 still shows as a random node",
+          "Writing a small hostname unit",
+          "Need ACL so only the laptop SSHs in",
+          "Waiting on the tag"
+        ]
+      },
+      "question": {
+        "text": {
+          "zh": "给这些机器打 `tag:floor`，还是先不打？",
+          "en": "Tag these boxes as `tag:floor`, or keep them untagged for now?"
+        },
+        "options": [
+          {
+            "id": "tag",
+            "label": {
+              "zh": "打 tag",
+              "en": "Tag them"
+            }
+          },
+          {
+            "id": "later",
+            "label": {
+              "zh": "先不打",
+              "en": "Leave untagged"
+            }
+          },
+          {
+            "id": "kill",
+            "label": {
+              "zh": "关掉",
+              "en": "Kill pane"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "key": "kvm",
+      "project": "infra",
+      "title": {
+        "zh": "经 Tailscale 绑定 Comet KVM",
+        "en": "Bind Comet KVM through Tailscale"
+      },
+      "lines": {
+        "zh": [
+          "glkvm.local 只在书桌 VLAN 有效",
+          "给 Comet 装 Tailscale",
+          "浏览器界面在 100.x 上起来了",
+          "HDMI 采集 4K30 — BIOS 够用",
+          "USB 键盘延迟 40ms",
+          "需要决定：走云中继，还是只走 tailnet？"
+        ],
+        "en": [
+          "glkvm.local only works on the desk VLAN",
+          "Installing Tailscale on the Comet",
+          "Browser UI comes up on 100.x",
+          "HDMI capture is 4K30 — fine for BIOS",
+          "USB keyboard latency is 40ms",
+          "Need a call: cloud relay or tailnet only?"
+        ]
+      },
+      "question": {
+        "text": {
+          "zh": "KVM 只暴露在 tailnet，还是也走 GL.iNet 云？",
+          "en": "Expose the KVM on the tailnet only, or also via GL.iNet cloud?"
+        },
+        "options": [
+          {
+            "id": "tail",
+            "label": {
+              "zh": "只走 tailnet",
+              "en": "Tailnet only"
+            }
+          },
+          {
+            "id": "cloud",
+            "label": {
+              "zh": "也走云",
+              "en": "Also cloud"
+            }
+          },
+          {
+            "id": "kill",
+            "label": {
+              "zh": "关掉",
+              "en": "Kill pane"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "key": "nvim",
+      "project": "dotfiles",
+      "title": {
+        "zh": "Neovim 不再写代码，只用来 review",
+        "en": "Stop writing code in Neovim — keep it for review"
+      },
+      "lines": {
+        "zh": [
+          "删掉我从不触发的 snippet 包",
+          "留下 telescope、gitsigns、lazygit",
+          "用 oil.nvim 逛 agent 刚动过的目录",
+          "读代码时 LSP 还在，方便跳转",
+          "关掉 Copilot — agent 才是 copilot",
+          "配置安静多了。可以 source。"
+        ],
+        "en": [
+          "Removing the snippet pack I never trigger",
+          "Keeping telescope, gitsigns, lazygit",
+          "Oil.nvim for walking the tree the agent just touched",
+          "LSP stays for jump-to-def while reading",
+          "Copilot off — the agents are the copilot",
+          "Config is quieter. Ready to source."
+        ]
+      },
+      "question": {
+        "text": {
+          "zh": "阅读时保留 LSP，还是拆掉、全靠 agent？",
+          "en": "Leave LSP on for reading, or strip it and rely on the agent?"
+        },
+        "options": [
+          {
+            "id": "lsp",
+            "label": {
+              "zh": "留着 LSP",
+              "en": "Keep LSP"
+            }
+          },
+          {
+            "id": "strip",
+            "label": {
+              "zh": "拆掉",
+              "en": "Strip it"
+            }
+          },
+          {
+            "id": "kill",
+            "label": {
+              "zh": "关掉",
+              "en": "Kill pane"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "key": "mail",
+      "project": "hey",
+      "title": {
+        "zh": "用一个安静的 agent 分流支持邮箱",
+        "en": "Triage the support mailbox with a quiet agent"
+      },
+      "lines": {
+        "zh": [
+          "给隔夜 140 封线程打标签",
+          "分成 bug、账单、和夸‘它就是好用’",
+          "起草 12 封回复，一封都没发",
+          "有一封看起来像真实故障",
+          "这封留给人看",
+          "其余可以扫一眼"
+        ],
+        "en": [
+          "Labeling 140 threads from overnight",
+          "Bugs vs billing vs 'it just works' praise",
+          "Drafting 12 replies, none sent",
+          "One thread looks like a real outage",
+          "Holding that one for a human",
+          "The rest are ready to glance"
+        ]
+      },
+      "question": {
+        "text": {
+          "zh": "把 12 封草稿发出去，还是留在 Review？",
+          "en": "Send the 12 drafts, or keep them in Review?"
+        },
+        "options": [
+          {
+            "id": "send",
+            "label": {
+              "zh": "发出去",
+              "en": "Send them"
+            }
+          },
+          {
+            "id": "hold",
+            "label": {
+              "zh": "留在 Review",
+              "en": "Keep in Review"
+            }
+          },
+          {
+            "id": "kill",
+            "label": {
+              "zh": "关掉",
+              "en": "Kill pane"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "key": "rails",
+      "project": "campfire",
+      "title": {
+        "zh": "把正在输入指示器移出主请求",
+        "en": "Move the typing indicator off the main request"
+      },
+      "lines": {
+        "zh": [
+          "现在指示器挂在发消息的 POST 上",
+          "所以写信框会发黏",
+          "Solid Cable 已经有 presence 流",
+          "焦点在时每 2 秒单独 ping 一次",
+          "每个房间要封顶",
+          "笔记本上看着对。再看 mini PC。"
+        ],
+        "en": [
+          "Indicator is on the message POST today",
+          "That's why the composer feels sticky",
+          "Solid Cable already has a presence stream",
+          "Drafting a separate ping every 2s while focused",
+          "Need to cap it per room",
+          "Looks right on the laptop. Checking the mini PC."
+        ]
+      },
+      "question": {
+        "text": {
+          "zh": "每 2 秒 ping，还是按键时 2 秒防抖？",
+          "en": "Ping every 2s, or only on keypress with a 2s debounce?"
+        },
+        "options": [
+          {
+            "id": "tick",
+            "label": {
+              "zh": "每 2 秒",
+              "en": "Every 2s"
+            }
+          },
+          {
+            "id": "key",
+            "label": {
+              "zh": "按键时",
+              "en": "On keypress"
+            }
+          },
+          {
+            "id": "kill",
+            "label": {
+              "zh": "关掉",
+              "en": "Kill pane"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "key": "theme",
+      "project": "omarchy",
+      "title": {
+        "zh": "做一套不再 Tokyo Night 的默认主题",
+        "en": "Port the Tokyo-less default theme"
+      },
+      "lines": {
+        "zh": [
+          "采样当前 GTK 和终端颜色",
+          "暖黑、纸色文字、鼠尾草绿",
+          "Alacritty、Neovim、GTK 必须一致",
+          "调色板写成一份 YAML",
+          "壁纸太蓝 — 在降饱和",
+          "需要一个不是城市名的名字"
+        ],
+        "en": [
+          "Sampling the current GTK + terminal colors",
+          "Warm black, paper text, sage accent",
+          "Alacritty, Neovim, and GTK must agree",
+          "Wrote the palette as a single YAML",
+          "Wallpaper is too blue — muting it",
+          "Need a name that isn't a city"
+        ]
+      },
+      "question": {
+        "text": {
+          "zh": "主题叫 `paper` 还是 `floor`？",
+          "en": "Call the theme `paper`, or `floor`?"
+        },
+        "options": [
+          {
+            "id": "paper",
+            "label": {
+              "zh": "paper",
+              "en": "paper"
+            }
+          },
+          {
+            "id": "floor",
+            "label": {
+              "zh": "floor",
+              "en": "floor"
+            }
+          },
+          {
+            "id": "kill",
+            "label": {
+              "zh": "关掉",
+              "en": "Kill pane"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "key": "tests",
+      "project": "once",
+      "title": {
+        "zh": "让系统测试在并行 agent 下还能跑",
+        "en": "Make the system tests survive parallel agents"
+      },
+      "lines": {
+        "zh": [
+          "Capybara 加共享测试库会撞车",
+          "每个 agent 需要自己的 schema",
+          "尝试每个 pane 一份 DATABASE_URL",
+          "fixtures 还在互相覆盖",
+          "改成只用事务测试",
+          "还剩一张不稳定的截图"
+        ],
+        "en": [
+          "Capybara + a shared test DB is the collision",
+          "Each agent needs its own schema",
+          "Trying DATABASE_URL per pane",
+          "Fixtures still clobber each other",
+          "Switching to transactional tests only",
+          "One flaky screenshot left"
+        ]
+      },
+      "question": {
+        "text": {
+          "zh": "从 agent 循环里拿掉系统测试，还是每个 pane 隔离数据库？",
+          "en": "Drop system tests from the agent loop, or isolate DBs per pane?"
+        },
+        "options": [
+          {
+            "id": "iso",
+            "label": {
+              "zh": "隔离数据库",
+              "en": "Isolate DBs"
+            }
+          },
+          {
+            "id": "drop",
+            "label": {
+              "zh": "拿掉系统测试",
+              "en": "Drop system tests"
+            }
+          },
+          {
+            "id": "kill",
+            "label": {
+              "zh": "关掉",
+              "en": "Kill pane"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "key": "docs",
+      "project": "herdr",
+      "title": {
+        "zh": "写远程 attach 流程文档",
+        "en": "Document the remote attach flow"
+      },
+      "lines": {
+        "zh": [
+          "herdr --remote user@host 就是全部诀窍",
+          "SSH 只是管子 — Tailscale 负责给机器起名",
+          "侧边栏 16 个 pane 的截图",
+          "警告：套一层 tmux 会把 agent 藏起来",
+          "草稿在 docs/remote.md",
+          "等人看一遍"
+        ],
+        "en": [
+          "herdr --remote user@host is the whole trick",
+          "SSH is just the pipe — Tailscale names the box",
+          "Screenshot of the sidebar with 16 panes",
+          "Warning: nested tmux hides the agent",
+          "Draft in docs/remote.md",
+          "Ready for a human pass"
+        ]
+      },
+      "question": {
+        "text": {
+          "zh": "文档开头写警告，还是先写顺畅路径？",
+          "en": "Lead the doc with the warning, or with the happy path?"
+        },
+        "options": [
+          {
+            "id": "warn",
+            "label": {
+              "zh": "警告在前",
+              "en": "Warning first"
+            }
+          },
+          {
+            "id": "happy",
+            "label": {
+              "zh": "顺畅路径",
+              "en": "Happy path"
+            }
+          },
+          {
+            "id": "kill",
+            "label": {
+              "zh": "关掉",
+              "en": "Kill pane"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "key": "billing",
+      "project": "once",
+      "title": {
+        "zh": "修年付计划被扣两次的问题",
+        "en": "Stop double-charging the annual plan"
+      },
+      "lines": {
+        "zh": [
+          "元凶是 webhook 重试",
+          "幂等键用了客户 id，不是事件 id",
+          "在写 unique index",
+          "90 天回填看起来干净",
+          "7 笔命中需要退款名单",
+          "先不发邮件，等你点头"
+        ],
+        "en": [
+          "Webhook retries were the smoking gun",
+          "Idempotency key was the customer id, not the event",
+          "Writing the unique index",
+          "Backfill looks clean for 90 days",
+          "Need a refund list for the 7 hits",
+          "Holding before I email anyone"
+        ]
+      },
+      "question": {
+        "text": {
+          "zh": "7 笔自动退，还是先发一封说明？",
+          "en": "Auto-refund the 7, or send a note first?"
+        },
+        "options": [
+          {
+            "id": "auto",
+            "label": {
+              "zh": "自动退",
+              "en": "Auto-refund"
+            }
+          },
+          {
+            "id": "note",
+            "label": {
+              "zh": "先说明",
+              "en": "Note first"
+            }
+          },
+          {
+            "id": "kill",
+            "label": {
+              "zh": "关掉",
+              "en": "Kill pane"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "panes": [
+    {
+      "host": "omarchy-1",
+      "task": "presence",
+      "kind": "claude",
+      "status": "blocked",
+      "progress": 62
+    },
+    {
+      "host": "omarchy-1",
+      "task": "iso",
+      "kind": "codex",
+      "status": "working",
+      "progress": 41
+    },
+    {
+      "host": "omarchy-1",
+      "task": "nvim",
+      "kind": "grok",
+      "status": "idle",
+      "progress": 0
+    },
+    {
+      "host": "omarchy-1",
+      "task": "changelog",
+      "kind": "grok",
+      "status": "done",
+      "progress": 100
+    },
+    {
+      "host": "omarchy-2",
+      "task": "rails",
+      "kind": "claude",
+      "status": "working",
+      "progress": 28
+    },
+    {
+      "host": "omarchy-2",
+      "task": "timezone",
+      "kind": "opencode",
+      "status": "blocked",
+      "progress": 55
+    },
+    {
+      "host": "omarchy-2",
+      "task": "tests",
+      "kind": "codex",
+      "status": "working",
+      "progress": 73
+    },
+    {
+      "host": "omarchy-2",
+      "task": "docs",
+      "kind": "grok",
+      "status": "working",
+      "progress": 18
+    },
+    {
+      "host": "framework",
+      "task": "composer",
+      "kind": "claude",
+      "status": "working",
+      "progress": 36
+    },
+    {
+      "host": "framework",
+      "task": "lazygit",
+      "kind": "codex",
+      "status": "done",
+      "progress": 100
+    },
+    {
+      "host": "framework",
+      "task": "mail",
+      "kind": "grok",
+      "status": "blocked",
+      "progress": 80
+    },
+    {
+      "host": "comet-a",
+      "task": "kvm",
+      "kind": "opencode",
+      "status": "working",
+      "progress": 50
+    },
+    {
+      "host": "comet-a",
+      "task": "tailscale",
+      "kind": "claude",
+      "status": "working",
+      "progress": 22
+    },
+    {
+      "host": "comet-a",
+      "task": "theme",
+      "kind": "codex",
+      "status": "idle",
+      "progress": 0
+    },
+    {
+      "host": "comet-b",
+      "task": "packing",
+      "kind": "claude",
+      "status": "working",
+      "progress": 67
+    },
+    {
+      "host": "comet-b",
+      "task": "billing",
+      "kind": "opencode",
+      "status": "done",
+      "progress": 100
+    }
+  ]
+}

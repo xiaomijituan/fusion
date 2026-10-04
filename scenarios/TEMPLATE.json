@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "hello",
+  "version": "0.1",
+  "name": "第一个剧本",
+  "hosts": [{ "id": "h1", "role": "笔记本" }],
+  "tasks": [
+    {
+      "key": "t1",
+      "title": "改一个 bug",
+      "lines": { "zh": ["打开仓库", "跑测试", "等你看一眼"] },
+      "question": {
+        "text": "继续还是停？",
+        "options": [
+          { "id": "keep", "label": "继续" },
+          { "id": "kill", "label": "关掉" }
+        ]
+      }
+    }
+  ],
+  "panes": [{ "host": "h1", "task": "t1" }]
+}

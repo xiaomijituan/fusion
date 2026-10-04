@@ -1,0 +1,38 @@
+# deps / build / platform
+node_modules/
+dist/
+.vercel/
+.tanstack/
+.node_modules.lock
+
+# 平台沙箱的运行时戳
+.grok/status
+.grok/og-pending
+
+# 构建/校验平台（App Builder）自带的指令语料与原始契约：本地开发要读，
+# 但它们不是 Fusion 的内容，也不随仓库发布。见 AGENTS.md「仓库边界」。
+.grok/skills/
+.grok/references/
+.grok/AGENTS.grok-build.md
+
+# QA 产物与无关工件
+screenshots/
+output/*
+!output/qa-local.mjs
+pdf_to_md.py
+
+# 本机其他调查留下的外来目录，与本仓库无关
+.oss-claude-tmp/
+.repro-134353/
+
+# 平台与系统
+.DS_Store
+*.log
+*.pid
+
+# 只给作者看的过程稿：保留在磁盘，不入库
+任务.md
+任务1.md
+docs/GIT.md
+docs/build-log.md
+docs/grill-checkpoint.md

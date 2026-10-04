@@ -1,0 +1,160 @@
+{
+  "schemaVersion": 1,
+  "id": "six-desk",
+  "version": "0.1.0",
+  "name": { "zh": "六格小机房", "en": "Six-desk floor" },
+  "hosts": [
+    {
+      "id": "desk",
+      "role": { "zh": "桌上那台", "en": "the desk box" },
+      "place": { "zh": "书桌", "en": "desk" }
+    },
+    { "id": "bag", "role": { "zh": "包里那台" } }
+  ],
+  "tasks": [
+    {
+      "key": "login",
+      "project": "auth",
+      "title": { "zh": "把登录改成一次性令牌", "en": "Move login onto one-time tokens" },
+      "lines": {
+        "zh": ["读 sessions 控制器", "列出三处依赖 cookie 的地方", "起草令牌表", "跑测试"],
+        "en": [
+          "Reading the sessions controller",
+          "Listing three cookie dependents",
+          "Drafting the token table",
+          "Running tests"
+        ]
+      },
+      "question": {
+        "text": {
+          "zh": "旧会话要强制失效，还是留七天宽限？",
+          "en": "Kill old sessions now, or keep a seven-day grace window?"
+        },
+        "options": [
+          { "id": "force", "label": { "zh": "全部失效", "en": "Invalidate all" } },
+          { "id": "grace", "label": { "zh": "留宽限", "en": "Keep the grace window" } },
+          { "id": "kill", "label": { "zh": "关掉", "en": "Close it" } }
+        ]
+      }
+    },
+    {
+      "key": "docs",
+      "project": "handbook",
+      "title": "给剧本格式写一章中文说明",
+      "lines": {
+        "zh": ["读规范草稿", "列出三个例子", "写第一段", "自己读一遍"],
+        "en": [
+          "Reading the spec draft",
+          "Listing three examples",
+          "Writing the first paragraph",
+          "Re-reading it"
+        ]
+      },
+      "question": {
+        "text": {
+          "zh": "例子用真项目，还是编一个？",
+          "en": "Use a real project for the examples, or invent one?"
+        },
+        "options": [
+          { "id": "real", "label": { "zh": "用真项目", "en": "Use the real one" } },
+          { "id": "invent", "label": { "zh": "编一个", "en": "Invent one" } },
+          { "id": "kill", "label": { "zh": "关掉", "en": "Close it" } }
+        ]
+      }
+    },
+    {
+      "key": "flaky",
+      "project": "ci",
+      "title": { "zh": "找出那个偶发失败的用例", "en": "Hunt the flaky test" },
+      "lines": {
+        "zh": ["跑二十遍", "记下三次失败", "缩小到两个文件"],
+        "en": ["Running it twenty times", "Noting three failures", "Narrowing to two files"]
+      },
+      "question": {
+        "text": {
+          "zh": "先隔离它，还是先修根因？",
+          "en": "Quarantine it first, or fix the root cause?"
+        },
+        "options": [
+          { "id": "quarantine", "label": { "zh": "先隔离", "en": "Quarantine" } },
+          { "id": "root", "label": { "zh": "修根因", "en": "Fix the root cause" } },
+          { "id": "kill", "label": { "zh": "关掉", "en": "Close it" } }
+        ]
+      }
+    },
+    {
+      "key": "deps",
+      "project": "supply chain",
+      "title": { "zh": "把三个包换掉", "en": "Replace three dependencies" },
+      "lines": {
+        "zh": ["列出使用点", "比较两个候选", "写迁移补丁"],
+        "en": ["Listing the call sites", "Comparing two candidates", "Writing the migration patch"]
+      },
+      "question": {
+        "text": {
+          "zh": "一次换完，还是新旧并存一个版本？",
+          "en": "Swap all at once, or run both for one release?"
+        },
+        "options": [
+          { "id": "once", "label": { "zh": "一次换完", "en": "All at once" } },
+          { "id": "both", "label": { "zh": "并存一版", "en": "Run both" } },
+          { "id": "kill", "label": { "zh": "关掉", "en": "Close it" } }
+        ]
+      }
+    },
+    {
+      "key": "notes",
+      "project": "teaching",
+      "title": {
+        "zh": "把这一局的决策时间线做成课后笔记",
+        "en": "Turn this run's timeline into a handout"
+      },
+      "lines": {
+        "zh": ["导出事件流", "挑三个关键决策", "写它们各自的后半段"],
+        "en": ["Exporting the stream", "Picking three decisions", "Writing what each one led to"]
+      },
+      "question": {
+        "text": {
+          "zh": "笔记给学员看结论，还是看过程？",
+          "en": "Should the handout show conclusions, or the process?"
+        },
+        "options": [
+          { "id": "process", "label": { "zh": "看过程", "en": "The process" } },
+          { "id": "result", "label": { "zh": "看结论", "en": "The conclusions" } },
+          { "id": "kill", "label": { "zh": "关掉", "en": "Close it" } }
+        ]
+      }
+    },
+    {
+      "key": "empty",
+      "project": "ux",
+      "title": {
+        "zh": "机房空着的时候该显示什么",
+        "en": "What the floor shows when nothing is running"
+      },
+      "lines": {
+        "zh": ["读三种空状态", "写一句提示"],
+        "en": ["Reading the three empty states", "Writing one hint"]
+      },
+      "question": {
+        "text": {
+          "zh": "空状态该催你做事，还是安静等着？",
+          "en": "Should the empty state push you to act, or wait quietly?"
+        },
+        "options": [
+          { "id": "push", "label": { "zh": "催一下", "en": "Push" } },
+          { "id": "quiet", "label": { "zh": "安静等", "en": "Wait" } },
+          { "id": "kill", "label": { "zh": "关掉", "en": "Close it" } }
+        ]
+      }
+    }
+  ],
+  "panes": [
+    { "host": "desk", "task": "login", "kind": "claude", "status": "blocked", "progress": 62 },
+    { "host": "desk", "task": "docs", "kind": "codex", "status": "working", "progress": 20 },
+    { "host": "desk", "task": "flaky", "kind": "opencode", "status": "working", "progress": 48 },
+    { "host": "bag", "task": "deps", "kind": "grok", "status": "idle", "progress": 0 },
+    { "host": "bag", "task": "notes", "kind": "claude", "status": "done", "progress": 100 },
+    { "host": "bag", "task": "empty", "kind": "codex", "status": "blocked", "progress": 55 }
+  ]
+}

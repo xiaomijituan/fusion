@@ -1,0 +1,12 @@
+package-lock.json
+dist/
+screenshots/
+public/
+src/routeTree.gen.ts
+.grok/
+AGENTS.md
+.tanstack/
+.vercel/
+output/
+任务.md
+任务1.md
