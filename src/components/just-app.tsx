@@ -7,6 +7,7 @@ import { FloorView } from "@/components/floor-view";
 import { LibraryView } from "@/components/library-view";
 import { ToolsView } from "@/components/tools-view";
 import { PlaybookView } from "@/components/playbook-view";
+import { ReviewView } from "@/components/review-view";
 import { StarField } from "@/components/star-field";
 import { cn } from "@/lib/cn";
 
@@ -55,6 +56,7 @@ export function JustApp() {
       if (e.key === "2") setView("tools");
       if (e.key === "3") setView("playbook");
       if (e.key === "4") setView("library");
+      if (e.key === "5") setView("review");
       if (e.key === "Enter" && helpOpen) {
         setHelp(false);
         return;
@@ -110,6 +112,7 @@ export function JustApp() {
             {view === "tools" ? <ToolsView /> : null}
             {view === "playbook" ? <PlaybookView /> : null}
             {view === "library" ? <LibraryView /> : null}
+            {view === "review" ? <ReviewView /> : null}
           </main>
         </div>
       )}
@@ -209,11 +212,12 @@ function Header() {
     { id: "tools" as const, label: t.navTools },
     { id: "playbook" as const, label: t.navPlaybook },
     { id: "library" as const, label: t.navLibrary },
+    { id: "review" as const, label: t.navReview },
   ];
 
   return (
     <header className="sticky top-0 z-20 border-b border-border bg-bg/95 backdrop-blur-sm">
-      <div className="flex items-center gap-3 px-4 py-3 sm:px-6">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 sm:px-6">
         <button
           type="button"
           onClick={() => setView("floor")}
@@ -221,14 +225,14 @@ function Header() {
         >
           {t.app}
         </button>
-        <nav className="ml-auto flex items-center gap-1 sm:ml-6 sm:gap-2">
+        <nav className="order-last -mx-1 flex w-full basis-full snap-x items-center gap-1 overflow-x-auto px-1 pb-0.5 sm:order-none sm:ml-6 sm:w-auto sm:basis-auto sm:justify-end sm:gap-2 sm:overflow-visible sm:px-0">
           {items.map((item) => (
             <button
               key={item.id}
               type="button"
               onClick={() => setView(item.id)}
               className={cn(
-                "rounded-sm px-3 py-2 font-mono text-xs tracking-wide uppercase",
+                "shrink-0 rounded-sm px-3 py-2 font-mono text-xs tracking-wide whitespace-nowrap uppercase",
                 view === item.id ? "bg-elevated text-fg" : "text-muted hover:text-fg",
               )}
             >
@@ -236,16 +240,18 @@ function Header() {
             </button>
           ))}
         </nav>
-        <ExportRunButton />
-        <button
-          type="button"
-          onClick={() => setHelp(true)}
-          className="hidden rounded-sm px-2 py-2 font-mono text-xs text-subtle hover:text-fg sm:block"
-          aria-label={t.keysTitle}
-        >
-          ?
-        </button>
-        <LangToggle lang={lang} setLang={setLang} />
+        <div className="ml-auto flex shrink-0 items-center gap-2">
+          <ExportRunButton />
+          <button
+            type="button"
+            onClick={() => setHelp(true)}
+            className="hidden rounded-sm px-2 py-2 font-mono text-xs text-subtle hover:text-fg sm:block"
+            aria-label={t.keysTitle}
+          >
+            ?
+          </button>
+          <LangToggle lang={lang} setLang={setLang} />
+        </div>
       </div>
     </header>
   );
@@ -264,7 +270,7 @@ function ExportRunButton() {
         setSaved(true);
         window.setTimeout(() => setSaved(false), 2000);
       }}
-      className="rounded-sm border border-border px-3 py-2 font-mono text-xs tracking-wide uppercase text-muted hover:text-fg"
+      className="shrink-0 rounded-sm border border-border px-3 py-2 font-mono text-xs whitespace-nowrap uppercase tracking-wide text-muted hover:text-fg"
     >
       {saved ? t.exported : t.exportRun}
     </button>

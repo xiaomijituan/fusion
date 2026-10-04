@@ -1,3 +1,5 @@
+import type { RunSnapshot } from "./review";
+
 export type RunRef = { name: string; version: string };
 export type Row = { id: string; status: string };
 export type Decision = {
@@ -6,7 +8,6 @@ export type Decision = {
   optionId: string;
   text?: string;
 };
-
 type EventLine = {
   seq: number;
   t: number;
@@ -23,6 +24,8 @@ type Header = {
   seed: number;
   startedAt: string;
   appVersion: string;
+  /** The scenario fields a review needs, so the file renders without the app's state. */
+  snapshot?: RunSnapshot;
 };
 
 type Buffer = { header: Header; events: EventLine[]; n: number; closed: boolean };
@@ -78,7 +81,10 @@ function push(b: Buffer, type: EventLine["type"], paneId: string | null, payload
  * Open a run, or resume the open one for this scenario.
  * The header line *is* the run start; `run.end` is an explicit event.
  */
-export function startRun(scenario: RunRef): { seed: number; runId: string } {
+export function startRun(
+  scenario: RunRef,
+  snapshot?: RunSnapshot,
+): { seed: number; runId: string } {
   const existing = load();
   if (existing && !existing.closed && existing.header.scenario.name === scenario.name) {
     return { seed: existing.header.seed, runId: existing.header.runId };
@@ -92,6 +98,7 @@ export function startRun(scenario: RunRef): { seed: number; runId: string } {
       seed,
       startedAt: new Date().toISOString(),
       appVersion: APP_VERSION,
+      ...(snapshot ? { snapshot } : {}),
     },
     events: [],
     n: 0,

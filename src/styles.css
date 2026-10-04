@@ -118,3 +118,28 @@
   );
   pointer-events: none;
 }
+
+/* 课后笔记是要印在纸上的：去掉机房配色，让一页 A4 说得清一局决策。 */
+@media print {
+  header,
+  .print\:hidden {
+    display: none !important;
+  }
+  html,
+  body {
+    background: #fff;
+    color: #111;
+  }
+  main {
+    overflow: visible !important;
+  }
+  .review,
+  .review * {
+    background: transparent !important;
+    color: #111 !important;
+    border-color: #bbb !important;
+  }
+  .review li {
+    break-inside: avoid;
+  }
+}

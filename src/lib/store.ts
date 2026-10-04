@@ -10,6 +10,7 @@ import {
   type ImportResult,
 } from "./library";
 import { mulberry32 } from "./rng";
+import { snapshotFor } from "./review";
 import { parseScenario, rulesFor, type Scenario } from "./scenario";
 import {
   answer as answerAgent,
@@ -101,14 +102,14 @@ export const useFloor = create<FloorState>()(
       setLang: (lang) => set({ lang }),
       setView: (view) => set({ view, helpOpen: false }),
       enter: () => {
-        startRun(runRef(get().scenario));
+        startRun(runRef(get().scenario), snapshotFor(get().scenario));
         set({ entered: true, view: "floor" });
       },
       loadScenario: (scenario) => {
         // A different floor is a different game: close the old run, open a new one.
         endRun("user");
         set({ scenario, agents: hydrate(scenario), selectedId: scenario.panes[0]?.id ?? "" });
-        startRun(runRef(scenario));
+        startRun(runRef(scenario), snapshotFor(scenario));
       },
       importScenario: (text) => {
         const result = importScenarioText(text);

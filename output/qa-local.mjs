@@ -13,6 +13,16 @@ function check(name, ok, detail = "") {
   if (!ok) failFast.push(name);
 }
 
+/**
+ * The platform injects a third-party script into the page. When its host black-holes the
+ * connection, waiting for networkidle stalls the whole walk on something that is not this
+ * app — so load the document, give the network a grace period, and carry on either way.
+ */
+async function open(target) {
+  await target.goto(url, { waitUntil: "domcontentloaded" });
+  await target.waitForLoadState("networkidle", { timeout: 5000 }).catch(() => {});
+}
+
 const browser = await chromium.launch();
 const errors = [];
 function watch(page, tag) {
@@ -28,7 +38,7 @@ const desktop = await browser.newContext({ viewport: { width: 1280, height: 800 
 await desktop.grantPermissions(["clipboard-read", "clipboard-write"], { origin: new URL(url).origin });
 const page = await desktop.newPage();
 watch(page, "desktop");
-await page.goto(url, { waitUntil: "networkidle" });
+await open(page);
 
 // 1. landing
 const title = page.locator("h1");
@@ -250,11 +260,61 @@ check(
 await page.getByRole("button", { name: "中", exact: true }).click();
 await page.waitForTimeout(300);
 
+// ---------- 24–27 课后笔记：事件流的第一个投影 ----------
+await page.locator("header button", { hasText: "机房" }).click();
+await page.waitForTimeout(300);
+await page.keyboard.press("n");
+await page.waitForTimeout(200);
+await page.keyboard.press("Enter");
+await page.waitForTimeout(400);
+
+await page.locator("header button", { hasText: "课后笔记" }).click();
+await page.waitForTimeout(500);
+const note = await page.getByTestId("review-view").innerText();
+check(
+  "24 课后笔记可打开，摘要行带剧本与种子",
+  note.includes("课后笔记") && /seed\s+\d/i.test(note),
+  note.slice(0, 60).replace(/\n/g, " "),
+);
+const entryCount = await page.getByTestId("review-entry").count();
+const firstPrompt = entryCount
+  ? await page.getByTestId("review-entry").first().locator("dd").first().innerText()
+  : "";
+check(
+  "25 笔记里的决策带出剧本原文（不是裸 paneId）",
+  entryCount >= 1 && /[\u4e00-\u9fa5]{4,}/.test(firstPrompt),
+  `entries=${entryCount} prompt=${firstPrompt.slice(0, 30).replace(/\n/g, " ")}`,
+);
+
+const [reDownload] = await Promise.all([
+  page.waitForEvent("download"),
+  page.getByTestId("export-run").click(),
+]);
+const exported = `${shots}qa-8-run.jsonl`;
+await reDownload.saveAs(exported);
+await page.locator('input[type="file"]').setInputFiles(exported);
+await page.waitForTimeout(600);
+const importedNote = await page.getByTestId("review-view").innerText();
+check(
+  "26 导出的 .jsonl 单独打开也能出笔记（header 内联快照）",
+  importedNote.includes("qa-8-run.jsonl") &&
+    (await page.getByTestId("review-entry").count()) >= 1 &&
+    !importedNote.includes("没带剧本快照"),
+  importedNote.slice(0, 50).replace(/\n/g, " "),
+);
+await page.screenshot({ path: `${shots}qa-9-review.png` });
+check(
+  "27 打印入口存在（不真的唤起系统打印框）",
+  await page.getByTestId("review-print").isVisible(),
+);
+await page.getByRole("button", { name: "回到这一局" }).click();
+await page.waitForTimeout(300);
+
 // ---------- mobile ----------
 const mob = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
 const mp = await mob.newPage();
 watch(mp, "mobile");
-await mp.goto(url, { waitUntil: "networkidle" });
+await open(mp);
 await mp.screenshot({ path: `${shots}qa-0-landing-mobile.png` });
 const landingOverflow = await mp.evaluate(() => {
   const d = document.documentElement;
@@ -280,6 +340,18 @@ await mp.screenshot({ path: `${shots}qa-6-floor-mobile.png` });
 await mp.locator("header >> text=工具").click().catch(() => {});
 await mp.waitForTimeout(400);
 await mp.screenshot({ path: `${shots}qa-7-tools-mobile.png` });
+await mp.locator("header >> text=课后笔记").click().catch(() => {});
+await mp.waitForTimeout(500);
+const reviewOverflow = await mp.evaluate(() => {
+  const d = document.documentElement;
+  return { scrollWidth: d.scrollWidth, clientWidth: d.clientWidth };
+});
+check(
+  "18b 手机课后笔记不横向溢出",
+  reviewOverflow.scrollWidth <= reviewOverflow.clientWidth + 1,
+  JSON.stringify(reviewOverflow),
+);
+await mp.screenshot({ path: `${shots}qa-10-review-mobile.png` });
 
 await browser.close();
 

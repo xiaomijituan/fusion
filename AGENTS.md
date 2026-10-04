@@ -38,6 +38,8 @@ production preview，跑 `output/qa-local.mjs` 的全部走查项）。
   同一局仍是同一局（ADR-0003）。
 - `src/lib/event-stream.ts` — 唯一运行时产物：JSONL 事件流（ADR-0002 / ADR-0004）。
   状态存 sessionStorage，每次调用读写存储，没有模块级缓存。
+- `src/lib/review.ts` — 事件流的**投影**：`parseRun()` 解析 JSONL，`buildReview()` 把决策与它
+  引发的跃迁配成一条复盘。只读，不写存储、不重算模拟（ADR-0007）。
 - `src/lib/store.ts` — zustand，把上面几层接起来；出厂剧本也走同一个解析器。
 - `src/components/` — 视图。`just-app.tsx` 是外壳与键盘流。
 - `scenarios/` — 随仓库发布的剧本；`scenarios/TEMPLATE.json` 是最短合法剧本。
