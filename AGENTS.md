@@ -26,6 +26,9 @@ CI（`.github/workflows/ci.yml`）在此基础上再加 `npm run build`、
 `npm run scenario:check` 和一次真实浏览器走查（`node scripts/ci-qa.mjs`：起
 production preview，跑 `output/qa-local.mjs` 的全部走查项）。
 
+服务端（GitHub 分支保护，本地绕不过）：改 `main` 必须走 PR、CI 的 `gates` 检查必须绿、
+禁止 force push 与删除 `main`。管理员暂不纳入（单人节奏，见 `docs/ci-playbook.md` 的 L4）。
+
 改完源码至少跑 `npm test`；改了渲染层再跑一次走查，别只信单元测试。
 
 ## 代码地图
