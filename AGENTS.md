@@ -27,7 +27,7 @@ CI（`.github/workflows/ci.yml`）在此基础上再加 `npm run build`、
 production preview，跑 `output/qa-local.mjs` 的全部走查项）。
 
 服务端（GitHub 分支保护，本地绕不过）：改 `main` 必须走 PR、CI 的 `gates` 检查必须绿、
-禁止 force push 与删除 `main`。管理员暂不纳入（单人节奏，见 `docs/ci-playbook.md` 的 L4）。
+禁止 force push 与删除 `main`。管理员暂不纳入（单人节奏，所以你自己直推仍能过）。
 
 改完源码至少跑 `npm test`；改了渲染层再跑一次走查，别只信单元测试。
 
@@ -60,8 +60,10 @@ production preview，跑 `output/qa-local.mjs` 的全部走查项）。
 
 - `.grok/skills/`、`.grok/references/`、`.grok/AGENTS.grok-build.md`：构建平台自带的指令语料与
   原始沙箱契约，本地开发会读，但不是 Fusion 的内容。
-- `任务*.md`、`docs/GIT.md`、`docs/build-log.md`、`docs/grill-checkpoint.md`：只给作者看的
-  过程稿。
+- `任务*.md`、`docs/GIT.md`、`docs/build-log.md`、`docs/grill-checkpoint.md`、
+  `docs/from-zero-to-public.md`：只给作者看的过程稿。
+- `docs/ci-playbook.md`：给作者补课用的门禁复盘，不是 Fusion 的规范，也不约束项目二/项目三。
+  教学稿一律不入库——**决策只认 `docs/adr/` 与 `CONTEXT.md`**，教程里写的裁剪建议没有约束力。
 - `screenshots/`、`output/`（`qa-local.mjs` 除外）、`.vercel/`、`node_modules/`：产物。
 
 ## 模板禁区

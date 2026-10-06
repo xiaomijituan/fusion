@@ -30,6 +30,10 @@ pdf_to_md.py
 *.log
 *.pid
 
+# 构建平台自带的工具语料（Qoder / OpenSpec 脚手架），不是 Fusion 的内容
+.qoder/
+openspec/
+
 # 只给作者看的过程稿：保留在磁盘，不入库
 任务.md
 任务1.md
@@ -37,3 +41,4 @@ docs/GIT.md
 docs/build-log.md
 docs/grill-checkpoint.md
 docs/from-zero-to-public.md
+docs/ci-playbook.md

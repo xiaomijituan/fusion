@@ -4,6 +4,8 @@ screenshots/
 public/
 src/routeTree.gen.ts
 .grok/
+.qoder/
+openspec/
 AGENTS.md
 .tanstack/
 .vercel/
