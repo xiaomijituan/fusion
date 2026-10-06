@@ -11,4 +11,4 @@
 ## Consequences
 
 - 剧本格式和决策日志格式必须是**带版本号的公开规范**（文件 schema），因为跨仓库没有共享类型。
-- 项目三嵌项目一时，只能依赖项目一的**发布产物**，不能 import 其源码；嵌入方式（iframe / web component / 构建产物拷贝）另立 ADR。
+- 项目三嵌项目一时，只能依赖项目一的**发布产物**，不能 import 其源码；嵌入方式（iframe / web component / 构建产物拷贝）另立 ADR。→ 已由 [ADR-0008](./0008-handbook-embeds-via-postmessage-over-release-artifacts.md) 落定。

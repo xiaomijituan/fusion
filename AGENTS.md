@@ -39,8 +39,8 @@ production preview，跑 `output/qa-local.mjs` 的全部走查项）。
   不碰 React 也不碰存储，确定性在这里单元测试。
 - `src/lib/rng.ts` — mulberry32。每个 tick 的随机流由 `(seed, n)` 派生，所以 F5 之后
   同一局仍是同一局（ADR-0003）。
-- `src/lib/event-stream.ts` — 唯一运行时产物：JSONL 事件流（ADR-0002 / ADR-0004）。
-  状态存 sessionStorage，每次调用读写存储，没有模块级缓存。
+- `src/lib/event-stream.ts` — 唯一运行时产物：JSONL 事件流（ADR-0002 / ADR-0004），对外规范
+  `docs/event-stream-format.md`。状态存 sessionStorage，每次调用读写存储，没有模块级缓存。
 - `src/lib/review.ts` — 事件流的**投影**：`parseRun()` 解析 JSONL，`buildReview()` 把决策与它
   引发的跃迁配成一条复盘。只读，不写存储、不重算模拟（ADR-0007）。
 - `src/lib/store.ts` — zustand，把上面几层接起来；出厂剧本也走同一个解析器。
@@ -53,6 +53,9 @@ production preview，跑 `output/qa-local.mjs` 的全部走查项）。
   不要新增第二份状态存储。
 - 剧本字段是对外契约：新增字段要同时改 `scenario.ts` 的白名单、
   `docs/scenario-format.md` 和 `scenarios/` 里的样例。
+- 事件流字段同样是对外契约（`docs/event-stream-format.md`）：改 `event-stream.ts` 写出的
+  行形状或 `payload` 语义，要同步规范并考虑 bump `schemaVersion`。注意规范里已记下事件流
+  解析器**只挡版本上界**这个缺口，补齐前别依赖"旧版本会被拒"。
 - 双语字段一律走归一化，不要在组件里写 `lang === "en" ? …`。
 - 注释默认不写；要写就写为什么（隐藏约束、不变量、针对某个 bug 的绕行），不复述代码在做什么。
 

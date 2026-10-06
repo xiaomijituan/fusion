@@ -4,6 +4,6 @@
 
 ## Consequences
 
-- 项目三（手册仓库）嵌入模拟器用 **iframe + postMessage**：章节页持有剧本 JSON，注入 iframe 内的应用——不触发 URL fetch（与 Q6 导入边界一致），数据仍是静态的。
+- 项目三（手册仓库）嵌入模拟器用 **iframe + postMessage**：章节页持有剧本 JSON，注入 iframe 内的应用——不触发 URL fetch（与 Q6 导入边界一致），数据仍是静态的。契约细节、发版产物清单与 vendor 副本规则见 [ADR-0008](./0008-handbook-embeds-via-postmessage-over-release-artifacts.md)。
 - "一章 = 一段正文 + 一个可玩 Scenario"成为项目三的内容单元约定。
 - 若日后真要排行榜，前提是先接受"对错"语义（推翻 ADR-0002）+ 引入后端，属新产品决策，不在 v1 延长线上。

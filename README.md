@@ -31,7 +31,7 @@ node output/qa-local.mjs http://127.0.0.1:5273/   # 33 项浏览器走查（CI �
 
 ## 写一份剧本
 
-格式规范见 [docs/scenario-format.md](./docs/scenario-format.md)，最短合法剧本见 [scenarios/TEMPLATE.json](./scenarios/TEMPLATE.json)（12 行）。提交前跑 `npm run scenario:check -- 你的.json`。
+格式规范见 [docs/scenario-format.md](./docs/scenario-format.md)，最短合法剧本见 [scenarios/TEMPLATE.json](./scenarios/TEMPLATE.json)（12 行）。提交前跑 `npm run scenario:check -- 你的.json`。导出的 `.jsonl` 事件流也有对外规范：[docs/event-stream-format.md](./docs/event-stream-format.md)——项目三的手册章节按这两份规范读写。
 
 ## 路线
 
