@@ -45,4 +45,5 @@ v1 已落地：可导入的**剧本（Scenario）**、可导出的**事件流**�
 
 - 无账号、无后端、无数据库：状态全在你的浏览器里
 - 教学模拟，不接真实 agent；真实编排是后续独立仓库的事
+- 代码、剧本与两份格式规范都用 **MIT**（见 [LICENSE](./LICENSE)），随便用，带上版权声明就行
 - 受 DHH on Lex Fridman 启发；与 37signals、Herdr、Omarchy 无关联
