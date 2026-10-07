@@ -58,6 +58,37 @@ test("parseRun refuses a stream newer than this build understands", () => {
   if (!out.ok) assert.match(out.errors.join(" "), /升级|upgrade/i);
 });
 
+// The window is [current, current-1], same rule the scenario parser uses. Only the upper
+// bound was ever enforced: anything <= 1 slipped through, including -5 and 0.5, which a
+// reader would otherwise silently get "helpfully" parsed as if it were v1.
+test("parseRun accepts the current schema version", () => {
+  const out = parseRun(stream([{ ...header, schemaVersion: 1 }]));
+  assert.equal(out.ok, true);
+});
+
+test("parseRun accepts one major version back", () => {
+  const out = parseRun(stream([{ ...header, schemaVersion: 0 }]));
+  assert.equal(out.ok, true);
+});
+
+test("parseRun refuses a version below the supported window", () => {
+  const out = parseRun(stream([{ ...header, schemaVersion: -5 }]));
+  assert.equal(out.ok, false);
+  if (!out.ok) assert.match(out.errors.join(" "), /schemaVersion/);
+});
+
+test("parseRun refuses a non-integer version", () => {
+  const out = parseRun(stream([{ ...header, schemaVersion: 0.5 }]));
+  assert.equal(out.ok, false);
+  if (!out.ok) assert.match(out.errors.join(" "), /整数|integer/i);
+});
+
+test("parseRun refuses a version given as a string", () => {
+  const out = parseRun(stream([{ ...header, schemaVersion: "1" }]));
+  assert.equal(out.ok, false);
+  if (!out.ok) assert.match(out.errors.join(" "), /header/);
+});
+
 test("parseRun keeps events in file order and drops blank lines", () => {
   const text = `${JSON.stringify(header)}\n${JSON.stringify(transition(1, 0, 10, "a1", "working", "blocked"))}\n\n`;
   const out = parseRun(text);

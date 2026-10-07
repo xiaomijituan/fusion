@@ -54,8 +54,8 @@ production preview，跑 `output/qa-local.mjs` 的全部走查项）。
 - 剧本字段是对外契约：新增字段要同时改 `scenario.ts` 的白名单、
   `docs/scenario-format.md` 和 `scenarios/` 里的样例。
 - 事件流字段同样是对外契约（`docs/event-stream-format.md`）：改 `event-stream.ts` 写出的
-  行形状或 `payload` 语义，要同步规范并考虑 bump `schemaVersion`。注意规范里已记下事件流
-  解析器**只挡版本上界**这个缺口，补齐前别依赖"旧版本会被拒"。
+  行形状或 `payload` 语义，要同步规范并考虑 bump `schemaVersion`。解析器的版本窗口
+  两端都挡（接受 `[当前, 当前-1]`，非整数一律拒绝），改这条要连 `review.test.ts` 一起改。
 - 双语字段一律走归一化，不要在组件里写 `lang === "en" ? …`。
 - 注释默认不写；要写就写为什么（隐藏约束、不变量、针对某个 bug 的绕行），不复述代码在做什么。
 

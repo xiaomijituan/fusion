@@ -80,11 +80,29 @@ export function parseRun(text: string): ParseRunResult {
   if (first === undefined || !isRecord(first) || typeof first.schemaVersion !== "number") {
     return { ok: false, errors: ["第 1 行不是事件流 header（缺 schemaVersion）"] };
   }
+  // Same window as the scenario parser: [current, current-1]. Only the upper bound used to be
+  // enforced, so -5 and 0.5 were parsed as if they were v1 — a silent guess about an unknown format.
+  if (!Number.isInteger(first.schemaVersion)) {
+    return {
+      ok: false,
+      errors: [
+        `schemaVersion 必须是整数，这份文件写的是 ${first.schemaVersion} / schemaVersion must be an integer`,
+      ],
+    };
+  }
   if (first.schemaVersion > RUN_SCHEMA_VERSION) {
     return {
       ok: false,
       errors: [
         `这份事件流来自更新的导出格式（schemaVersion ${first.schemaVersion} > ${RUN_SCHEMA_VERSION}），请升级应用 / upgrade the app`,
+      ],
+    };
+  }
+  if (first.schemaVersion < RUN_SCHEMA_VERSION - 1) {
+    return {
+      ok: false,
+      errors: [
+        `这份事件流太旧（schemaVersion ${first.schemaVersion}），本应用支持 ${RUN_SCHEMA_VERSION - 1} 或 ${RUN_SCHEMA_VERSION}，请先用一次性升级脚本处理 / too old, run the upgrade script`,
       ],
     };
   }
