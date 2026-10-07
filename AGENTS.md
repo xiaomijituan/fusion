@@ -59,10 +59,16 @@ CI 的机器钉在 `ubuntu-24.04`，不用 `ubuntu-latest`——`latest` 会在 
   `{type:"fusion:load-scenario", scenario:"<剧本原文>"}`，多一个字段就拒。这里**不解析剧本**，
   收下的文本交给 `store.importScenario()`，与粘贴、拖拽同一条路。
 - `src/components/` — 视图。`just-app.tsx` 是外壳与键盘流。
-- `src/cli/` — 两个发版产物的入口（ADR-0008）：`scenario-check.ts`（剧本校验器）、
-  `review-cli.ts`（事件流 → 决策表）。`npm run artifacts` 用 rolldown 各打成**单文件**
+- `src/cli/` — 两个发版产物（ADR-0008）。规则在前者、有单测：`scenario-check.ts`
+  （`checkScenarioText`）、`review-cli.ts`（`projectRun`）；`*-main.ts` 只做外壳（读文件、
+  打印、退出码），由 CI 拿真产物跑一遍。`npm run artifacts` 用 rolldown 各打成**单文件**
   `output/artifacts/*.mjs`（连 zod 一起塞进去），项目三的 CI 下载了直接跑，不读这里的源码。
 - `scenarios/` — 随仓库发布的剧本；`scenarios/TEMPLATE.json` 是最短合法剧本。
+- `vite.sim.config.ts` — 第二条构建：无路由、无 SSR、无平台插件，把 `sim.html` +
+  `src/sim-entry.tsx` 打进**一个可双击的 HTML**（`npm run sim:build`）。生产构建是
+  TanStack Start + nitro 的 SSR 产物，没有能双击的 index.html，而 `file://` 拒绝加载模块
+  脚本，所以这份产物靠 `scripts/inline-single-file.mjs` 把 JS/CSS 内联起来——那个模块有单测，
+  包括一条"用字符串做替换会把自己拼进脚本"的负控制。别把它当冗余构建删掉。
 
 ## 约定
 

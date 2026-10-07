@@ -27,12 +27,12 @@ const sha = (() => {
 
 const targets = [
   {
-    input: "src/cli/scenario-check.ts",
+    input: "src/cli/scenario-check-main.ts",
     file: "scenario-check.mjs",
     what: "剧本校验器 / scenario validator",
   },
   {
-    input: "src/cli/review-cli.ts",
+    input: "src/cli/review-cli-main.ts",
     file: "review-cli.mjs",
     what: "事件流 → 决策表投影 / event-stream projector",
   },

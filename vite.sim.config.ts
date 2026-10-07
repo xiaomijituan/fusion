@@ -7,6 +7,8 @@ import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig, type Plugin } from "vite";
+// @ts-expect-error JS module alongside the TS config — same pattern as vite.config.ts
+import { inlineIntoHtml } from "./scripts/inline-single-file.mjs";
 import { APP_VERSION } from "./src/lib/version.ts";
 
 const outDir = fileURLToPath(new URL("output/sim/", import.meta.url));
@@ -20,20 +22,10 @@ function inlineIntoSingleFile(): Plugin {
       const js = readdirSync(assets).find((f) => f.endsWith(".js"));
       const css = readdirSync(assets).find((f) => f.endsWith(".css"));
       if (!js || !css) throw new Error(`expected one js and one css under ${assets}`);
-      const style = readFileSync(join(outDir, "assets", css), "utf8");
-      // A literal </script> would close the tag early; \/ is the same character to JS.
-      const script = readFileSync(join(outDir, "assets", js), "utf8").replace(
-        /<\/script>/g,
-        "<\\/script>",
-      );
-      // Replacement *functions*, not strings: minified code is full of $' and $` sequences that
-      // String.replace would otherwise splice in as literal substrings of this very document.
-      const doc = readFileSync(join(outDir, "sim.html"), "utf8")
-        .replace(/<link rel="stylesheet"[^>]*>/, () => `<style>\n${style}\n</style>`)
-        .replace(
-          /<script type="module"[^>]*><\/script>/,
-          () => `<script type="module">\n${script}\n</script>`,
-        );
+      const doc = inlineIntoHtml(readFileSync(join(outDir, "sim.html"), "utf8"), {
+        css: readFileSync(join(assets, css), "utf8"),
+        js: readFileSync(join(assets, js), "utf8"),
+      });
       const target = `fusion-sim-${APP_VERSION}.html`;
       writeFileSync(join(outDir, target), doc);
       rmSync(join(outDir, "sim.html"), { force: true });
