@@ -106,6 +106,28 @@ test("parseRun requires the header to identify the run", () => {
   }
 });
 
+// "Present" is not the same as "usable": an all-null header used to pass the identity check and
+// come back as a run whose runId is "" and seed is 0 — a table with no identity at all.
+test("parseRun refuses identity fields that are present but the wrong type", () => {
+  const cases: Record<string, unknown>[] = [
+    { runId: null },
+    { runId: 42 },
+    { seed: null },
+    { seed: "7" },
+    { startedAt: null },
+    { appVersion: null },
+    { scenario: null },
+    { scenario: "six-desk" },
+    { scenario: { ...header.scenario, name: null } },
+    { scenario: { ...header.scenario, version: 1 } },
+  ];
+  for (const patch of cases) {
+    const out = parseRun(stream([{ ...header, ...patch }]));
+    assert.equal(out.ok, false, `应当拒绝：${JSON.stringify(patch)}`);
+    if (!out.ok) assert.match(out.errors.join(" "), /header/);
+  }
+});
+
 test("parseRun keeps events in file order and drops blank lines", () => {
   const text = `${JSON.stringify(header)}\n${JSON.stringify(transition(1, 0, 10, "a1", "working", "blocked"))}\n\n`;
   const out = parseRun(text);

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { checkScenarioText } from "./scenario-check.ts";
+import { checkScenarioText, parseCheckArgs } from "./scenario-check.ts";
 
 // The shape the QA walk uses: two hosts, one task, three panes.
 function scenarioText(over: Record<string, unknown> = {}): string {
@@ -86,4 +86,12 @@ test("warnings pass by default and fail under --strict", () => {
 
   const strict = checkScenarioText("smelly.json", smelly, true);
   assert.equal(strict.code, 1);
+});
+
+test("argument parsing keeps --strict out of the file list", () => {
+  assert.deepEqual(parseCheckArgs(["a.json", "--strict", "b.json"]), {
+    strict: true,
+    files: ["a.json", "b.json"],
+  });
+  assert.deepEqual(parseCheckArgs([]), { strict: false, files: [] });
 });

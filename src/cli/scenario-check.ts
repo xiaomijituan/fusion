@@ -4,6 +4,11 @@ import { parseScenario, type ScenarioIssue } from "../lib/scenario.ts";
 
 export type CheckReport = { code: 0 | 1; lines: string[] };
 
+/** argv → flags and files. `--strict` promotes warnings to failures. */
+export function parseCheckArgs(argv: string[]): { strict: boolean; files: string[] } {
+  return { strict: argv.includes("--strict"), files: argv.filter((a) => !a.startsWith("--")) };
+}
+
 /** Validate one scenario document. `strict` turns warnings into a failure. */
 export function checkScenarioText(label: string, text: string, strict = false): CheckReport {
   const result = parseScenario(text);

@@ -106,18 +106,32 @@ export function parseRun(text: string): ParseRunResult {
       ],
     };
   }
-  // schemaVersion alone does not make a header: the projector must be able to tell a run file
-  // from "some JSON" — a scenario handed here by mistake used to render as a smug empty table.
-  const missing = (["runId", "scenario", "seed", "startedAt", "appVersion"] as const).filter(
-    (key) => first[key] === undefined,
-  );
-  if (missing.length) {
+  // schemaVersion alone does not make a header, and neither does "the field is there". A null
+  // identity used to pass and come back as a run whose runId is "" and seed is 0 — a table that
+  // cannot say whose game it is. So: present and of the right type, or refuse.
+  const scenarioRecord = isRecord(first.scenario) ? first.scenario : {};
+  const identity = [
+    ["runId", typeof first.runId === "string"],
+    [
+      "scenario",
+      isRecord(first.scenario) &&
+        typeof scenarioRecord.name === "string" &&
+        typeof scenarioRecord.version === "string",
+    ],
+    ["seed", typeof first.seed === "number"],
+    ["startedAt", typeof first.startedAt === "string"],
+    ["appVersion", typeof first.appVersion === "string"],
+  ] as const;
+  const unusable = identity.filter(([, ok]) => !ok).map(([key]) => key);
+  if (unusable.length) {
     return {
       ok: false,
-      errors: [`第 1 行不是事件流 header（缺 ${missing.join("、")}）/ not a run header`],
+      errors: [
+        `第 1 行不是事件流 header（${unusable.join("、")} 缺失或类型不对）/ not a run header`,
+      ],
     };
   }
-  const scenario = isRecord(first.scenario) ? first.scenario : {};
+  const scenario = scenarioRecord;
   const header: RunHeader = {
     schemaVersion: first.schemaVersion,
     runId: typeof first.runId === "string" ? first.runId : "",

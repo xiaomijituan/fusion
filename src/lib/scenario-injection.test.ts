@@ -55,9 +55,22 @@ test("a malformed message body is refused without throwing", () => {
 
 test("the reply tells the host page what happened, without leaking internals", () => {
   const good = buildInjectionResult(true, []);
-  assert.deepEqual(good, { type: `${INJECT_MESSAGE_TYPE}-result`, ok: true, errors: [] });
+  assert.deepEqual(good, {
+    type: `${INJECT_MESSAGE_TYPE}-result`,
+    ok: true,
+    errors: [],
+    warnings: [],
+  });
   const bad = buildInjectionResult(false, ['出现了规范里没有的字段（"x"）']);
   assert.equal(bad.ok, false);
   assert.equal(bad.errors.length, 1);
   assert.equal(bad.type, `${INJECT_MESSAGE_TYPE}-result`);
+});
+
+// A scenario can load fine and still warn — "已替换同名剧本" is the one that matters, because the
+// chapter page would otherwise overwrite a stored scenario and hear nothing back.
+test("warnings ride along on a successful load", () => {
+  const out = buildInjectionResult(true, [], ["已替换同名剧本「six-desk」。"]);
+  assert.equal(out.ok, true);
+  assert.deepEqual(out.warnings, ["已替换同名剧本「six-desk」。"]);
 });

@@ -79,11 +79,16 @@ CI 的机器钉在 `ubuntu-24.04`，不用 `ubuntu-latest`——`latest` 会在 
 - 事件流字段同样是对外契约（`docs/event-stream-format.md`）：改 `event-stream.ts` 写出的
   行形状或 `payload` 语义，要同步规范并考虑 bump `schemaVersion`。解析器的版本窗口
   两端都挡（接受 `[当前, 当前-1]`，非整数一律拒绝），header 的 `runId`/`scenario`/`seed`/
-  `startedAt`/`appVersion` 缺任何一个即拒；改这两条要连 `review.test.ts` 一起改。
+  `startedAt`/`appVersion` **缺失或类型不对都拒**（写成 `null` 也算不对）；改这两条要连
+  `review.test.ts` 一起改。
 - 双语字段一律走归一化，不要在组件里写 `lang === "en" ? …`。
-- 注入消息的字段（`type` / `scenario`）与回执形状同样是对外契约（ADR-0008）：端点只做
-  放行判定，**不要在这里解析剧本**，也不要给它加第二条校验路径；改形状连
+- 注入消息的字段（`type` / `scenario`）与回执形状（`ok` / `errors` / `warnings`）同样是对外契约
+  （ADR-0008）：端点只做放行判定，**不要在这里解析剧本**，也不要给它加第二条校验路径。
+  `warnings` 不是装饰——"已替换同名剧本"只在里面出现，吞掉它就是静默覆盖。改形状连
   `scenario-injection.test.ts` 和走查 28–31 一起改。
+- 两个命令行产物的**退出码也是契约**（0 通过 / 1 内容不合格 / 2 工具没跑成，ADR-0008 有表）：
+  规则本体在 `src/cli/scenario-check.ts`、`src/cli/review-cli.ts`，`*-main.ts` 只碰参数与 IO。
+  `scripts/check-scenarios.mjs` 复用同一份规则，别再抄第三份循环。
 - 注释默认不写；要写就写为什么（隐藏约束、不变量、针对某个 bug 的绕行），不复述代码在做什么。
 
 ## 仓库边界（什么不提交）

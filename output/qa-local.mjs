@@ -416,6 +416,14 @@ check(
   `ok=${good.verdict?.ok} rows=${good.rows} hosts=${good.hosts}`,
 );
 
+const repeat = await injectIntoFrame(scenarioDoc());
+check(
+  "29b 顶掉库里同名剧本时，warning 跟着回执回来（不静默覆盖）",
+  repeat.verdict?.ok === true &&
+    (repeat.verdict?.warnings ?? []).join(" ").includes("已替换同名剧本"),
+  `warnings=${JSON.stringify(repeat.verdict?.warnings ?? []).slice(0, 80)}`,
+);
+
 const bad = await injectIntoFrame(scenarioDoc({ panes: [{ host: "ghost", task: "t1" }] }));
 check(
   "30 注入的剧本走同一条校验：坏剧本被端点拒了，机房不跟着换",

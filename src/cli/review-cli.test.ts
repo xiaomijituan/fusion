@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { projectRun } from "./review-cli.ts";
+import { parseReviewArgs, projectRun } from "./review-cli.ts";
 
 const snapshot = {
   panes: [{ id: "a1", task: "t1" }],
@@ -114,4 +114,16 @@ test("without an inlined snapshot the table still prints, and says what is missi
   const text = out.lines.join("\n");
   assert.match(text, /没带剧本快照/);
   assert.match(text, /\| a1 \|.*\| keep \|/);
+});
+
+test("argument parsing: one file, --json, and extra paths refused", () => {
+  assert.deepEqual(parseReviewArgs(["run.jsonl", "--json"]), {
+    ok: true,
+    file: "run.jsonl",
+    json: true,
+  });
+  assert.equal(parseReviewArgs([]).ok, false);
+  const two = parseReviewArgs(["a.jsonl", "b.jsonl"]);
+  assert.equal(two.ok, false);
+  if (!two.ok) assert.match(two.reason, /只读一个文件/);
 });

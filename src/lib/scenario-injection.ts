@@ -57,13 +57,17 @@ export function readInjection(data: unknown, context: InjectionContext): Injecti
 }
 
 export type InjectionResult = {
-  type: typeof INJECT_RESULT_TYPE;
+  type: string;
   ok: boolean;
-  /** Already flattened to text: a chapter page shows these, it has no ScenarioIssue type. */
   errors: string[];
+  warnings: string[];
 };
 
 /** What we post back so the chapter page can tell the reader why a scenario was refused. */
-export function buildInjectionResult(ok: boolean, errors: string[]): InjectionResult {
-  return { type: INJECT_RESULT_TYPE, ok, errors };
+export function buildInjectionResult(
+  ok: boolean,
+  errors: string[],
+  warnings: string[] = [],
+): InjectionResult {
+  return { type: INJECT_RESULT_TYPE, ok, errors, warnings };
 }

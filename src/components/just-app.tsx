@@ -33,10 +33,12 @@ export function JustApp() {
   // second trust channel: the accepted text goes through the same importScenario() as pasting,
   // so it meets the same whitelist and the same size cap, and the host gets our real verdict back.
   useEffect(() => {
-    const reply = (ok: boolean, errors: string[], origin: string) => {
+    const issueLine = (issue: { path: string; zh: string }) =>
+      issue.path ? `${issue.path}: ${issue.zh}` : issue.zh;
+    const reply = (ok: boolean, errors: string[], warnings: string[], origin: string) => {
       if (window.parent === window) return; // nowhere to answer: we are not embedded
       window.parent.postMessage(
-        buildInjectionResult(ok, errors),
+        buildInjectionResult(ok, errors, warnings),
         origin && origin !== "null" ? origin : "*",
       );
     };
@@ -49,7 +51,10 @@ export function JustApp() {
         const result = useFloor.getState().importScenario(decision.text);
         reply(
           result.ok,
-          result.ok ? [] : result.errors.map((issue) => `${issue.path}: ${issue.zh}`),
+          result.ok ? [] : result.errors.map(issueLine),
+          // A load can succeed with warnings — "已替换同名剧本" among them. Without this the host
+          // page would overwrite a stored scenario and hear nothing but ok back.
+          result.ok ? result.warnings.map(issueLine) : [],
           event.origin,
         );
         return;
@@ -58,7 +63,7 @@ export function JustApp() {
       const ours = !!body && typeof body === "object" && body.type === INJECT_MESSAGE_TYPE;
       // Answer a failed load request with the real reason — but only to the parent that asked,
       // so a stranger frame sending this type cannot make us talk to the host page about it.
-      if (ours && event.source === window.parent) reply(false, [decision.reason], event.origin);
+      if (ours && event.source === window.parent) reply(false, [decision.reason], [], event.origin);
     };
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);

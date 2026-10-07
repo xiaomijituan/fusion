@@ -4,6 +4,23 @@ import { buildReview, parseRun, type ReviewEntry } from "../lib/review.ts";
 
 export type RunReport = { code: 0 | 1; lines: string[] };
 
+/**
+ * argv → one file plus --json. Extra positional args are refused rather than ignored: a reader
+ * who typed two paths deserves to hear that only one was read.
+ */
+export function parseReviewArgs(
+  argv: string[],
+): { ok: true; file: string; json: boolean } | { ok: false; reason: string } {
+  const files = argv.filter((a) => !a.startsWith("--"));
+  if (files.length === 0) return { ok: false, reason: "要给一个 .jsonl 事件流文件" };
+  if (files.length > 1)
+    return {
+      ok: false,
+      reason: `只读一个文件，多给了 ${files.length} 个：${files.join("、")}`,
+    };
+  return { ok: true, file: files[0]!, json: argv.includes("--json") };
+}
+
 const cell = (value: string | null) => (value ?? "—").replace(/\|/g, "\\|").replace(/\n/g, " ");
 const caused = (entry: ReviewEntry) =>
   entry.caused.length ? entry.caused.map((c) => `${c.from}→${c.to}`).join("、") : "—";
