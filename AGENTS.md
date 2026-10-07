@@ -26,6 +26,10 @@ CI（`.github/workflows/ci.yml`）在此基础上再加 `npm run build`、
 `npm run scenario:check` 和一次真实浏览器走查（`node scripts/ci-qa.mjs`：起
 production preview，跑 `output/qa-local.mjs` 的全部走查项）。
 
+CI 的机器钉在 `ubuntu-24.04`，不用 `ubuntu-latest`——`latest` 会在 2026-10-19 自己
+换成 Ubuntu 26，而走查依赖 `playwright install --with-deps chromium` 装的那批系统包。
+要跟着迁那天，单独开一次验证再改这一行，别让它悄悄变。
+
 服务端（GitHub 分支保护，本地绕不过）：改 `main` 必须走 PR、CI 的 `gates` 检查必须绿、
 禁止 force push 与删除 `main`。管理员暂不纳入（单人节奏，所以你自己直推仍能过）。
 

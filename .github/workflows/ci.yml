@@ -7,10 +7,13 @@ on:
 
 jobs:
   gates:
-    runs-on: ubuntu-latest
+    # 钉死镜像，不用 ubuntu-latest：latest 从 2026-10-19 起从 Ubuntu 24.04 换成 26.04，
+    # 而我们脚下的机器不该在没人决定的那天自己换。CI 里的 playwright --with-deps chromium
+    # 装的是系统依赖，最容易随镜像变。要跟迁的那一天，单独开一次验证再改这里。
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
