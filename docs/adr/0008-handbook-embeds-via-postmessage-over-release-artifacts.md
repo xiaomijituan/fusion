@@ -23,7 +23,8 @@ ADR-0001 要求"嵌入方式（iframe / web component / 构建产物拷贝）另
 
   `scenario` 必须是**文本**而不是已解析的对象：注入不是第二条信任通道，收到的文本走的是与粘贴、拖拽**完全相同**的 `importScenario()` → `parseScenario()` 路径，同一套白名单与尺寸帽，`errors` 就是那套中文报错（`"<path>: <zh>"`）。顶层标签页（`window.parent === window`）对这类消息装聋作哑，非父页面发来的同理。走查 28–31 项盯着这四条：合法注入换机房、坏剧本被拒且机房不跟着换、夹带字段连剧本都不解析、顶层页不收注入。
 
-- **release 资产从 v0.1.0 起固定三件**：`fusion-sim-<ver>.zip`（可离线打开的模拟器）、`scenario-check.mjs`（剧本校验器）、`review-cli.mjs`（事件流 → 决策表投影）。后两件是打包好的单文件，零浏览器依赖——依据是 `src/lib/review.ts` 只含两个 `import type`、`src/lib/scenario.ts` 只依赖 zod。手册 CI 按 pin 死的版本下载它们，不读 fusion 源码。
+- **release 资产从 v0.1.0 起固定三件**：`fusion-sim-<ver>.html`（离线单文件模拟器）、`scenario-check.mjs`（剧本校验器）、`review-cli.mjs`（事件流 → 决策表投影）。后两件是打包好的单文件，零浏览器依赖——依据是 `src/lib/review.ts` 只含两个 `import type`、`src/lib/scenario.ts` 只依赖 zod。手册 CI 按 pin 死的版本下载它们，不读 fusion 源码。
+- **模拟器是一件自包含的 HTML，不是 zip**（2026-10-07 定）。原写"`fusion-sim-<ver>.zip`"，实现时发现：本仓的生产构建是 TanStack Start + nitro 的 SSR 产物，压根没有可直接双击的 `index.html`；而 `file://` 会拒绝加载模块脚本，散成几个文件就得靠一个本地服务器。所以另走一条 `vite.sim.config.ts`：无路由、无 SSR、无平台插件，JS 与 CSS 全部内联进一个 388KB 的 HTML，双击即起机房，除它自己什么都不取（走查 32–33 项盯着这条）。zip 只会把同一个文件藏起来，白拿一次解压。
 - **iframe 装的是手册仓 vendor 的构建产物副本，不链接 fusion 官方部署站。** 否则官方站一挂，全书的交互同时失效；副本能按章节需要单独回滚。
 - **兼容窗口沿用剧本格式现状**：应用接受 `schemaVersion ∈ [当前, 当前-1]`，所以手册可以落后 fusion 一个大版本而不烂。手册自身的内容格式版本另立编号，不与剧本的 `schemaVersion` 混用——先例是事件流的 `schemaVersion` 与剧本的版本互不绑定（ADR-0004）。
 - **交互只在自有静态站成立，跨渠道必须降级。** 掘金与微信读书过滤 iframe 与原始 HTML，所以同一份章节正文要能编译成纯图文形态（决策表由 `review-cli` 从事件流投影而来，剧本 JSON 作为可复制文本附在文后）。这是渠道事实，不是可选优化。

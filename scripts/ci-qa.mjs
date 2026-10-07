@@ -66,7 +66,21 @@ try {
     );
   } else {
     console.log(`preview up on ${URL_TO_CHECK} — running the QA walk`);
-    exitCode = await run(["output/qa-local.mjs", URL_TO_CHECK]);
+    // The walk opens the offline single-file build, so build it here too: a stale or missing
+    // output/sim must fail the walk, not silently skip it.
+    const sim = await run([
+      "scripts/with-app-env.mjs",
+      "vite",
+      "build",
+      "-c",
+      "vite.sim.config.ts",
+    ]);
+    if (sim !== 0) {
+      console.error("sim:build failed — the offline release artifact could not be produced");
+      exitCode = sim;
+    } else {
+      exitCode = await run(["output/qa-local.mjs", URL_TO_CHECK]);
+    }
   }
 } finally {
   stopServer();

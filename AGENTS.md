@@ -33,6 +33,11 @@ production preview，跑 `output/qa-local.mjs` 的全部走查项）。
 `node scripts/ci-qa.mjs`（先 `npm run build`，它起 production preview 再跑
 `output/qa-local.mjs`）；任何一项 FAIL 都会以非零码退出，所以 CI 真挡得住。
 
+**发版产物**（ADR-0008，项目三只消费这些）：`npm run artifacts` 打两个单文件 CLI，
+`npm run sim:build` 打离线单文件模拟器，都落在 `output/`（不入库）。走查的 32–33 项
+会真的用 `file://` 打开那个 HTML，CI 末尾再拿产物跑一遍真文件。版本号只写一处：
+`src/lib/version.ts`——发版、事件流 header 与产物文件名上的数字必须是同一个。
+
 ## 代码地图
 
 - `src/lib/scenario.ts` — 剧本 JSON 的 zod 白名单校验 + 归一化（`string | {zh,en}` →
