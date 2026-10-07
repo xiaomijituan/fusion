@@ -106,6 +106,17 @@ export function parseRun(text: string): ParseRunResult {
       ],
     };
   }
+  // schemaVersion alone does not make a header: the projector must be able to tell a run file
+  // from "some JSON" — a scenario handed here by mistake used to render as a smug empty table.
+  const missing = (["runId", "scenario", "seed", "startedAt", "appVersion"] as const).filter(
+    (key) => first[key] === undefined,
+  );
+  if (missing.length) {
+    return {
+      ok: false,
+      errors: [`第 1 行不是事件流 header（缺 ${missing.join("、")}）/ not a run header`],
+    };
+  }
   const scenario = isRecord(first.scenario) ? first.scenario : {};
   const header: RunHeader = {
     schemaVersion: first.schemaVersion,

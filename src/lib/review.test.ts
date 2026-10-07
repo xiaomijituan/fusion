@@ -89,6 +89,23 @@ test("parseRun refuses a version given as a string", () => {
   if (!out.ok) assert.match(out.errors.join(" "), /header/);
 });
 
+// A schemaVersion alone does not make a header. Handing the projector a scenario file used to
+// produce a smug empty table; the release artifact has to say "this is not an event stream".
+test("parseRun refuses a JSON object that merely has a schemaVersion", () => {
+  const out = parseRun(stream([{ schemaVersion: 1, id: "x", version: "0.1", name: "n" }]));
+  assert.equal(out.ok, false);
+  if (!out.ok) assert.match(out.errors.join(" "), /不是事件流|header/);
+});
+
+test("parseRun requires the header to identify the run", () => {
+  for (const field of ["runId", "scenario", "seed", "startedAt", "appVersion"] as const) {
+    const stripped: Record<string, unknown> = { ...header };
+    delete stripped[field];
+    const out = parseRun(stream([stripped]));
+    assert.equal(out.ok, false, `缺 ${field} 的 header 应被拒`);
+  }
+});
+
 test("parseRun keeps events in file order and drops blank lines", () => {
   const text = `${JSON.stringify(header)}\n${JSON.stringify(transition(1, 0, 10, "a1", "working", "blocked"))}\n\n`;
   const out = parseRun(text);

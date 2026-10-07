@@ -24,3 +24,10 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Browser QA walk against the production build
         run: node scripts/ci-qa.mjs
+      - name: Bundle the release artifacts and run them like the handbook CI would
+        # Last, because the projector is smoked on the .jsonl the walk just downloaded
+        # (screenshots/qa-8-run.jsonl) — real app output beats a hand-written fixture.
+        run: |
+          npm run artifacts
+          node output/artifacts/scenario-check.mjs scenarios/six-desk.json
+          node output/artifacts/review-cli.mjs screenshots/qa-8-run.jsonl

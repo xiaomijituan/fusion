@@ -14,6 +14,8 @@ export default tseslint.config(
       ".vercel/**",
       ".nitro/**",
       "node_modules/**",
+      // bundled release artifacts (npm run artifacts) — generated, not authored
+      "output/artifacts/**",
       "src/routeTree.gen.ts",
     ],
   },

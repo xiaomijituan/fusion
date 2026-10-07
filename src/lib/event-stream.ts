@@ -1,4 +1,5 @@
 import type { RunSnapshot } from "./review";
+import { APP_VERSION } from "./version.ts";
 
 export type RunRef = { name: string; version: string };
 export type Row = { id: string; status: string };
@@ -32,8 +33,6 @@ type Buffer = { header: Header; events: EventLine[]; n: number; closed: boolean 
 
 const STORE_KEY = "fusion.run";
 const SCHEMA_VERSION = 1;
-// Bumped with releases; kept here so the stream says what produced it.
-const APP_VERSION = "0.1.0";
 
 /**
  * The run lives in sessionStorage and is read on every call — no module cache, so a
