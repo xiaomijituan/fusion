@@ -310,6 +310,116 @@ check(
 await page.getByRole("button", { name: "回到这一局" }).click();
 await page.waitForTimeout(300);
 
+// ---------- 28 顶层标签页不接受注入（先验这一条：page 还在前台） ----------
+await page.locator("header button", { hasText: "机房" }).click();
+await page.waitForTimeout(400);
+const rowsBeforeSelf = await page.locator("aside ul li").count();
+const selfInject = await page.evaluate(
+  async ({ text }) => {
+    window.postMessage({ type: "fusion:load-scenario", scenario: text }, window.location.origin);
+    await new Promise((r) => setTimeout(r, 1500));
+    return document.querySelectorAll("aside ul li").length;
+  },
+  { text: scenarioDoc({ panes: [{ host: "ka", task: "t1" }] }) },
+);
+check(
+  "28 顶层标签页不接受注入（自己发的也不算父页面）",
+  rowsBeforeSelf === 6 && selfInject === rowsBeforeSelf,
+  `rows=${rowsBeforeSelf} -> ${selfInject}`,
+);
+
+// ---------- 29–31 剧本注入端点（ADR-0008：手册章节页嵌一份构建产物，用 postMessage 递剧本） ----------
+// 宿主页与 iframe 同源：把当前 origin 的文档换成只放着 iframe 的页面，iframe 里加载的就是
+// 本次走查对着的那份构建产物。同一上下文里的第二张标签页在 headless 下算后台页，
+// Playwright 的可见性等它会饿死，所以这一段只读 iframe 的 DOM、只发合成键盘事件。
+const host = await desktop.newPage();
+watch(host, "host");
+await open(host);
+await host.setContent(
+  `<!doctype html><html><head><meta charset="utf-8"><title>inject-host</title></head>` +
+    `<body><iframe id="sim" src="${url}" width="1200" height="800"></iframe></body></html>`,
+);
+const frameHas = (css) =>
+  host.waitForFunction(
+    (selector) => !!document.getElementById("sim")?.contentDocument?.querySelector(selector),
+    css,
+    { timeout: 20000, polling: 250 },
+  );
+await frameHas("h1, aside ul li");
+// entered 存在 localStorage 里，同一上下文的 iframe 可能直接就是机房；还在封面上才按 Enter。
+// 合成事件走的是和真人同一个 window keydown 处理器。
+const neededEnter = await host.evaluate(() => {
+  const doc = document.getElementById("sim").contentDocument;
+  if (doc.querySelector("aside ul li")) return false;
+  const win = doc.defaultView;
+  win.dispatchEvent(new win.KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+  return true;
+});
+if (neededEnter) await frameHas("aside ul li");
+
+/** Send one raw message into the embedded build; return its verdict plus the floor it left. */
+function injectRaw(message) {
+  return host.evaluate(
+    async (msg) => {
+      const frame = document.getElementById("sim");
+      const verdict = new Promise((resolve) => {
+        const on = (e) => {
+          if (e.data && typeof e.data.ok === "boolean") {
+            window.removeEventListener("message", on);
+            resolve(e.data);
+          }
+        };
+        window.addEventListener("message", on);
+        setTimeout(() => resolve(null), 8000);
+      });
+      frame.contentWindow.postMessage(msg, window.location.origin);
+      const result = await verdict;
+      await new Promise((r) => setTimeout(r, 500));
+      const doc = frame.contentDocument;
+      return {
+        verdict: result,
+        rows: doc.querySelectorAll("aside ul li").length,
+        hosts: [...doc.querySelectorAll("aside h2")].map((h) => h.textContent).join(","),
+      };
+    },
+    message,
+  );
+}
+const injectIntoFrame = (scenario) => injectRaw({ type: "fusion:load-scenario", scenario });
+
+const good = await injectIntoFrame(scenarioDoc());
+check(
+  "29 父页面注入合法剧本：端点回 ok，机房随之换掉",
+  good.verdict?.ok === true &&
+    good.verdict?.errors?.length === 0 &&
+    good.rows === 3 &&
+    good.hosts === "ka,kb",
+  `ok=${good.verdict?.ok} rows=${good.rows} hosts=${good.hosts}`,
+);
+
+const bad = await injectIntoFrame(scenarioDoc({ panes: [{ host: "ghost", task: "t1" }] }));
+check(
+  "30 注入的剧本走同一条校验：坏剧本被端点拒了，机房不跟着换",
+  bad.verdict?.ok === false &&
+    (bad.verdict?.errors ?? []).join(" ").includes("找不到主机") &&
+    bad.rows === good.rows,
+  `ok=${bad.verdict?.ok} errors=${JSON.stringify(bad.verdict?.errors ?? []).slice(0, 70)}`,
+);
+
+const smuggled = await injectRaw({
+  type: "fusion:load-scenario",
+  scenario: scenarioDoc(),
+  eval: "alert(1)",
+});
+check(
+  "31 消息里夹规范外的字段：直接拒，连剧本都不解析",
+  smuggled.verdict?.ok === false &&
+    (smuggled.verdict?.errors ?? []).join(" ").includes("字段") &&
+    smuggled.rows === good.rows,
+  JSON.stringify(smuggled.verdict?.errors ?? []).slice(0, 70),
+);
+await host.screenshot({ path: `${shots}qa-11-injection.png` }).catch(() => {});
+
 // ---------- mobile ----------
 const mob = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
 const mp = await mob.newPage();
@@ -359,3 +469,6 @@ console.log(results.join("\n"));
 console.log("\n--- console/page errors ---");
 console.log(errors.length ? [...new Set(errors)].join("\n") : "none");
 console.log(`\nFAILURES: ${failFast.length ? failFast.join(" | ") : "none"}`);
+// CI reads this exit code, so a FAIL has to leave a non-zero one — printing a list nobody
+// checks is how the walk became decoration.
+process.exitCode = failFast.length ? 1 : 0;

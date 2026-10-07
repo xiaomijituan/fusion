@@ -12,7 +12,17 @@ ADR-0001 要求"嵌入方式（iframe / web component / 构建产物拷贝）另
 
 ## Consequences
 
-- **注入端点是 fusion 侧唯一核心改动**，且它今天**还不存在**：全仓 postMessage 只有预览面板的导航桥（`src/lib/preview-host-bridge.ts`）和 auth 弹窗回调，`store.ts` 的 `loadScenario` 只由粘贴与拖拽调用。ADR-0006 预告的 `getBytes()` 出口属同一族，一并在这里建。新端点必须走与粘贴**完全相同**的 `parseScenario` 路径、同一套白名单与尺寸帽——注入不是第二条信任通道。
+- **注入端点是 fusion 侧唯一核心改动**，已建成（`src/lib/scenario-injection.ts` + `just-app.tsx` 的 `message` 监听）。线上形状：
+
+  ```jsonc
+  // 父页 → iframe（只这两个字段，多一个都拒）
+  { "type": "fusion:load-scenario", "scenario": "<剧本 JSON 的原文字符串>" }
+  // iframe → 父页（同一条消息回给发起方；不是父页发的、或本页没被嵌进来，都不回）
+  { "type": "fusion:load-scenario-result", "ok": true, "errors": [] }
+  ```
+
+  `scenario` 必须是**文本**而不是已解析的对象：注入不是第二条信任通道，收到的文本走的是与粘贴、拖拽**完全相同**的 `importScenario()` → `parseScenario()` 路径，同一套白名单与尺寸帽，`errors` 就是那套中文报错（`"<path>: <zh>"`）。顶层标签页（`window.parent === window`）对这类消息装聋作哑，非父页面发来的同理。走查 28–31 项盯着这四条：合法注入换机房、坏剧本被拒且机房不跟着换、夹带字段连剧本都不解析、顶层页不收注入。
+
 - **release 资产从 v0.1.0 起固定三件**：`fusion-sim-<ver>.zip`（可离线打开的模拟器）、`scenario-check.mjs`（剧本校验器）、`review-cli.mjs`（事件流 → 决策表投影）。后两件是打包好的单文件，零浏览器依赖——依据是 `src/lib/review.ts` 只含两个 `import type`、`src/lib/scenario.ts` 只依赖 zod。手册 CI 按 pin 死的版本下载它们，不读 fusion 源码。
 - **iframe 装的是手册仓 vendor 的构建产物副本，不链接 fusion 官方部署站。** 否则官方站一挂，全书的交互同时失效；副本能按章节需要单独回滚。
 - **兼容窗口沿用剧本格式现状**：应用接受 `schemaVersion ∈ [当前, 当前-1]`，所以手册可以落后 fusion 一个大版本而不烂。手册自身的内容格式版本另立编号，不与剧本的 `schemaVersion` 混用——先例是事件流的 `schemaVersion` 与剧本的版本互不绑定（ADR-0004）。

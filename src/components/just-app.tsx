@@ -3,6 +3,7 @@ import { ui } from "@/lib/content";
 import { findTask } from "@/lib/scenario";
 import { exportRun } from "@/lib/event-stream";
 import { startTicker, useFloor } from "@/lib/store";
+import { INJECT_MESSAGE_TYPE, buildInjectionResult, readInjection } from "@/lib/scenario-injection";
 import { FloorView } from "@/components/floor-view";
 import { LibraryView } from "@/components/library-view";
 import { ToolsView } from "@/components/tools-view";
@@ -26,6 +27,41 @@ export function JustApp() {
   useEffect(() => {
     setReady(true);
     startTicker();
+  }, []);
+
+  // A handbook chapter page can hand us a scenario (ADR-0008). This is deliberately not a
+  // second trust channel: the accepted text goes through the same importScenario() as pasting,
+  // so it meets the same whitelist and the same size cap, and the host gets our real verdict back.
+  useEffect(() => {
+    const reply = (ok: boolean, errors: string[], origin: string) => {
+      if (window.parent === window) return; // nowhere to answer: we are not embedded
+      window.parent.postMessage(
+        buildInjectionResult(ok, errors),
+        origin && origin !== "null" ? origin : "*",
+      );
+    };
+    const onMessage = (event: MessageEvent) => {
+      const decision = readInjection(event.data, {
+        embedded: window.parent !== window,
+        fromParent: event.source === window.parent,
+      });
+      if (decision.accept) {
+        const result = useFloor.getState().importScenario(decision.text);
+        reply(
+          result.ok,
+          result.ok ? [] : result.errors.map((issue) => `${issue.path}: ${issue.zh}`),
+          event.origin,
+        );
+        return;
+      }
+      const body = event.data as { type?: unknown } | null;
+      const ours = !!body && typeof body === "object" && body.type === INJECT_MESSAGE_TYPE;
+      // Answer a failed load request with the real reason — but only to the parent that asked,
+      // so a stranger frame sending this type cannot make us talk to the host page about it.
+      if (ours && event.source === window.parent) reply(false, [decision.reason], event.origin);
+    };
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
   }, []);
 
   useEffect(() => {

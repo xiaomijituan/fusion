@@ -29,7 +29,9 @@ production preview，跑 `output/qa-local.mjs` 的全部走查项）。
 服务端（GitHub 分支保护，本地绕不过）：改 `main` 必须走 PR、CI 的 `gates` 检查必须绿、
 禁止 force push 与删除 `main`。管理员暂不纳入（单人节奏，所以你自己直推仍能过）。
 
-改完源码至少跑 `npm test`；改了渲染层再跑一次走查，别只信单元测试。
+改完源码至少跑 `npm test`；改了渲染层再跑一次走查，别只信单元测试。走查是
+`node scripts/ci-qa.mjs`（先 `npm run build`，它起 production preview 再跑
+`output/qa-local.mjs`）；任何一项 FAIL 都会以非零码退出，所以 CI 真挡得住。
 
 ## 代码地图
 
@@ -44,6 +46,9 @@ production preview，跑 `output/qa-local.mjs` 的全部走查项）。
 - `src/lib/review.ts` — 事件流的**投影**：`parseRun()` 解析 JSONL，`buildReview()` 把决策与它
   引发的跃迁配成一条复盘。只读，不写存储、不重算模拟（ADR-0007）。
 - `src/lib/store.ts` — zustand，把上面几层接起来；出厂剧本也走同一个解析器。
+- `src/lib/scenario-injection.ts` — 项目三章节页嵌进来时的消息入口判定（ADR-0008）：只认
+  `{type:"fusion:load-scenario", scenario:"<剧本原文>"}`，多一个字段就拒。这里**不解析剧本**，
+  收下的文本交给 `store.importScenario()`，与粘贴、拖拽同一条路。
 - `src/components/` — 视图。`just-app.tsx` 是外壳与键盘流。
 - `scenarios/` — 随仓库发布的剧本；`scenarios/TEMPLATE.json` 是最短合法剧本。
 
@@ -57,6 +62,9 @@ production preview，跑 `output/qa-local.mjs` 的全部走查项）。
   行形状或 `payload` 语义，要同步规范并考虑 bump `schemaVersion`。解析器的版本窗口
   两端都挡（接受 `[当前, 当前-1]`，非整数一律拒绝），改这条要连 `review.test.ts` 一起改。
 - 双语字段一律走归一化，不要在组件里写 `lang === "en" ? …`。
+- 注入消息的字段（`type` / `scenario`）与回执形状同样是对外契约（ADR-0008）：端点只做
+  放行判定，**不要在这里解析剧本**，也不要给它加第二条校验路径；改形状连
+  `scenario-injection.test.ts` 和走查 28–31 一起改。
 - 注释默认不写；要写就写为什么（隐藏约束、不变量、针对某个 bug 的绕行），不复述代码在做什么。
 
 ## 仓库边界（什么不提交）
