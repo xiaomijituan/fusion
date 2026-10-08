@@ -30,7 +30,10 @@ function inlineIntoSingleFile(): Plugin {
       writeFileSync(join(outDir, target), doc);
       rmSync(join(outDir, "sim.html"), { force: true });
       rmSync(assets, { recursive: true, force: true });
-      console.log(`wrote output/sim/${target} (${Math.round(doc.length / 1024)} KB)`);
+      // Bytes, not doc.length: the document is UTF-8 and mostly Chinese, so the character count
+      // undershoots the real file size by ~7% (a "388 KB" claim next to a 404,364-byte file).
+      const bytes = readFileSync(join(outDir, target)).length;
+      console.log(`wrote output/sim/${target} (${Math.round(bytes / 1024)} KB)`);
     },
   };
 }
