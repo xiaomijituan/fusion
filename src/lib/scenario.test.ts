@@ -173,6 +173,36 @@ test("unknown keys are rejected, so an executable payload fails closed", () => {
   );
 });
 
+// The only useful thing this message can do is name the field. zod reports the offending keys of
+// an object in issue.keys and leaves the path empty, so a plain path-derived key came out "".
+test("an unknown field is named, one error per key", () => {
+  const result = parse({ ...minimal, nonsense: 1, alsoBad: 2 });
+  assert.equal(result.ok, false);
+  if (result.ok) return;
+  const named = result.errors.filter((e) => e.code === "unknown_field");
+  assert.equal(named.length, 2, "两个未知字段应该各报一条");
+  assert.deepEqual(named.map((e) => e.path).sort(), ["alsoBad", "nonsense"]);
+  assert.ok(
+    named.every((e) => /（\w+）/.test(e.zh) && /Unknown field "\w+"/.test(e.en)),
+    "错误文本里必须带上字段名",
+  );
+});
+
+// The same trap one level down: an unknown key inside a task used to be reported as the field
+// "task" (the fallback for an empty path), which blames something the author never wrote.
+test("an unknown field inside a task names the offending key, not the item", () => {
+  const withBogus = parse({
+    ...minimal,
+    tasks: [{ ...minimal.tasks[0], bogus: 3 }],
+  });
+  assert.equal(withBogus.ok, false);
+  if (withBogus.ok) return;
+  const named = withBogus.errors.filter((e) => e.code === "unknown_field");
+  assert.equal(named.length, 1);
+  assert.equal(named[0].path, "tasks[0].bogus");
+  assert.match(named[0].zh, /（bogus）/);
+});
+
 test("an oversized file is refused before parsing", () => {
   const huge = `{"schemaVersion":1,"pad":"${"x".repeat(MAX_FILE_BYTES + 10)}"}`;
   const result = parseScenario(huge);

@@ -212,6 +212,28 @@ function readBi(value: unknown, at: string, issues: ScenarioIssue[]): Bi {
   return { zh: "", en: "" };
 }
 
+/**
+ * One zod issue on an item schema, turned into our issues. A `unrecognized_keys` issue keeps the
+ * offending names in `keys` and leaves `path` empty, so the generic "last path segment" fallback
+ * used to blame a field the author never wrote — a stray key inside a task was reported as "task".
+ * Each unknown key gets its own line.
+ */
+function itemIssues(
+  issue: { code: string; path: PropertyKey[]; keys?: string[] },
+  prefix: string,
+  fallbackKey: string,
+): ScenarioIssue[] {
+  if (issue.code === "unrecognized_keys") {
+    return (issue.keys ?? []).map((k) => {
+      const found = describe(issue.code, k);
+      return err(found.code, `${prefix}.${k}`, found.zh, found.en);
+    });
+  }
+  const found = describe(issue.code, String(issue.path.at(-1) ?? fallbackKey));
+  const at = `${prefix}${issue.path.length ? `.${issue.path.join(".")}` : ""}`;
+  return [err(found.code, at, found.zh, found.en)];
+}
+
 function nearest(needle: string, options: string[]): string | undefined {
   return options.find((candidate) => candidate !== needle && editDistance(needle, candidate) <= 2);
 }
@@ -271,6 +293,16 @@ export function parseScenario(text: string): ParseResult {
   const shape = fileSchema.safeParse(raw);
   if (!shape.success) {
     for (const issue of shape.error.issues) {
+      // A zod `unrecognized_keys` issue carries the offending names in `keys` and leaves `path`
+      // empty, so the "last path segment" recipe below produced an empty field name — and naming
+      // the field is the only useful thing this message does. One line per key.
+      if (issue.code === "unrecognized_keys") {
+        for (const k of issue.keys ?? []) {
+          const found = describe(issue.code, k);
+          issues.push(err(found.code, k, found.zh, found.en));
+        }
+        continue;
+      }
       const at = pathOf(issue);
       const key = at.split(".").pop() ?? at;
       const found = describe(issue.code, key);
@@ -300,17 +332,8 @@ export function parseScenario(text: string): ParseResult {
   file.hosts.forEach((entry, i) => {
     const parsed = hostSchema.safeParse(entry);
     if (!parsed.success) {
-      for (const issue of parsed.error.issues) {
-        const found = describe(issue.code, String(issue.path.at(-1) ?? "host"));
-        issues.push(
-          err(
-            found.code,
-            `hosts[${i}]${issue.path.length ? `.${issue.path.join(".")}` : ""}`,
-            found.zh,
-            found.en,
-          ),
-        );
-      }
+      for (const issue of parsed.error.issues)
+        issues.push(...itemIssues(issue, `hosts[${i}]`, "host"));
       return;
     }
     const at = `hosts[${i}]`;
@@ -341,17 +364,8 @@ export function parseScenario(text: string): ParseResult {
   file.tasks.forEach((entry, i) => {
     const parsed = taskSchema.safeParse(entry);
     if (!parsed.success) {
-      for (const issue of parsed.error.issues) {
-        const found = describe(issue.code, String(issue.path.at(-1) ?? "task"));
-        issues.push(
-          err(
-            found.code,
-            `tasks[${i}]${issue.path.length ? `.${issue.path.join(".")}` : ""}`,
-            found.zh,
-            found.en,
-          ),
-        );
-      }
+      for (const issue of parsed.error.issues)
+        issues.push(...itemIssues(issue, `tasks[${i}]`, "task"));
       return;
     }
     const at = `tasks[${i}]`;
@@ -430,17 +444,8 @@ export function parseScenario(text: string): ParseResult {
   file.panes.forEach((entry, i) => {
     const parsed = paneSchema.safeParse(entry);
     if (!parsed.success) {
-      for (const issue of parsed.error.issues) {
-        const found = describe(issue.code, String(issue.path.at(-1) ?? "pane"));
-        issues.push(
-          err(
-            found.code,
-            `panes[${i}]${issue.path.length ? `.${issue.path.join(".")}` : ""}`,
-            found.zh,
-            found.en,
-          ),
-        );
-      }
+      for (const issue of parsed.error.issues)
+        issues.push(...itemIssues(issue, `panes[${i}]`, "pane"));
       return;
     }
     const at = `panes[${i}]`;
