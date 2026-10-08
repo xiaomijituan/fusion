@@ -26,16 +26,18 @@ CI（`.github/workflows/ci.yml`）在此基础上再加 `npm run build`、
 `npm run scenario:check` 和一次真实浏览器走查（`node scripts/ci-qa.mjs`：起
 production preview，跑 `output/qa-local.mjs` 的全部走查项）。
 
-CI 的机器钉在 `ubuntu-24.04`，不用 `ubuntu-latest`——`latest` 会在 2026-10-19 自己
-换成 Ubuntu 26，而走查依赖 `playwright install --with-deps chromium` 装的那批系统包。
-要跟着迁那天，单独开一次验证再改这一行，别让它悄悄变。
+CI 运行的机器写死为 `ubuntu-24.04`，不使用 `ubuntu-latest`。原因是 `ubuntu-latest` 会在
+2026-10-19 自动指向 Ubuntu 26，而走查依赖 `playwright install --with-deps chromium` 安装的
+那一批系统包，更换镜像最容易出问题的就是这一层。将来要跟着迁移时，请单独跑一次验证，
+确认走查全部通过之后再修改这一行；理由同时写在 `ci.yml` 的注释里。
 
 服务端（GitHub 分支保护，本地绕不过）：改 `main` 必须走 PR、CI 的 `gates` 检查必须绿、
 禁止 force push 与删除 `main`。管理员暂不纳入（单人节奏，所以你自己直推仍能过）。
 
-改完源码至少跑 `npm test`；改了渲染层再跑一次走查，别只信单元测试。走查是
-`node scripts/ci-qa.mjs`（先 `npm run build`，它起 production preview 再跑
-`output/qa-local.mjs`）；任何一项 FAIL 都会以非零码退出，所以 CI 真挡得住。
+改完源码以后至少要跑一次 `npm test`；如果改了渲染层，还要再跑一次浏览器走查，不要只相信单元测试。
+走查的命令是 `node scripts/ci-qa.mjs`：它先用 `npm run build` 的产物起一个生产预览服务器，
+再把 `output/qa-local.mjs` 里的全部走查项跑一遍。走查里任何一项失败都会让命令以非零状态退出，
+所以这道检查在 CI 里是真的能挡住问题的。
 
 **发版产物**（ADR-0008，项目三只消费这些）：`npm run artifacts` 打两个单文件 CLI，
 `npm run sim:build` 打离线单文件模拟器，都落在 `output/`（不入库）。走查的 32–33 项
@@ -76,19 +78,15 @@ CI 的机器钉在 `ubuntu-24.04`，不用 `ubuntu-latest`——`latest` 会在 
   不要新增第二份状态存储。
 - 剧本字段是对外契约：新增字段要同时改 `scenario.ts` 的白名单、
   `docs/scenario-format.md` 和 `scenarios/` 里的样例。
-- 事件流字段同样是对外契约（`docs/event-stream-format.md`）：改 `event-stream.ts` 写出的
-  行形状或 `payload` 语义，要同步规范并考虑 bump `schemaVersion`。解析器的版本窗口
-  两端都挡（接受 `[当前, 当前-1]`，非整数一律拒绝），header 的 `runId`/`scenario`/`seed`/
-  `startedAt`/`appVersion` **缺失或类型不对都拒**（写成 `null` 也算不对）；改这两条要连
-  `review.test.ts` 一起改。
+- 事件流字段同样是对外契约（规范在 `docs/event-stream-format.md`）。如果你修改了
+  `event-stream.ts` 写出的行结构或者 `payload` 的含义，就要同步修改那份规范，并考虑把
+  `schemaVersion` 加一。解析器现在两头都设了限制：版本号只接受当前版本和它的前一个大版本
+  （也就是 `1` 和 `0`），不是整数的版本号一律拒绝。事件流头部里的 `runId`、`scenario`、
+  `seed`、`startedAt`、`appVersion` 这五个字段，缺一个或者类型不对都会被拒绝，写成 `null`
+  也算类型不对。修改上面这两条规则时，同时修改 `review.test.ts` 里对应的测试。
 - 双语字段一律走归一化，不要在组件里写 `lang === "en" ? …`。
-- 注入消息的字段（`type` / `scenario`）与回执形状（`ok` / `errors` / `warnings`）同样是对外契约
-  （ADR-0008）：端点只做放行判定，**不要在这里解析剧本**，也不要给它加第二条校验路径。
-  `warnings` 不是装饰——"已替换同名剧本"只在里面出现，吞掉它就是静默覆盖。改形状连
-  `scenario-injection.test.ts` 和走查 28–31 一起改。
-- 两个命令行产物的**退出码也是契约**（0 通过 / 1 内容不合格 / 2 工具没跑成，ADR-0008 有表）：
-  规则本体在 `src/cli/scenario-check.ts`、`src/cli/review-cli.ts`，`*-main.ts` 只碰参数与 IO。
-  `scripts/check-scenarios.mjs` 复用同一份规则，别再抄第三份循环。
+- 注入消息的字段（`type` 和 `scenario`）与回执的形状（`ok`、`errors`、`warnings`）同样是对外契约（ADR-0008）。这个端点只判断"这条消息能不能收下"，**不要在这里解析剧本**，也不要为它单独再加一条校验路径。回执里的 `warnings` 不是装饰：像"已经替换了同名的旧剧本"这句话只出现在 `warnings` 里，把它吞掉就等于悄悄地覆盖了读者的东西。修改这个结构时，同时修改 `scenario-injection.test.ts` 和走查的第 28 到 31 项。
+- 两个命令行工具的退出码也是对外契约，含义写在 ADR-0008 的表格里：`0` 表示通过，`1` 表示用户提交的内容不合格，`2` 表示工具自己没有跑成（比如没有给出文件、给出了多个路径，或者文件读不出来）。判断规则本身放在 `src/cli/scenario-check.ts` 和 `src/cli/review-cli.ts` 里，`*-main.ts` 只负责读取参数、读文件、打印结果和设置退出码。`scripts/check-scenarios.mjs` 复用同一份规则，不要再抄一份循环出来。
 - 注释默认不写；要写就写为什么（隐藏约束、不变量、针对某个 bug 的绕行），不复述代码在做什么。
 
 ## 仓库边界（什么不提交）
