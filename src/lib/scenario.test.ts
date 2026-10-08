@@ -125,6 +125,61 @@ test("a pane pointing at an unknown host is rejected with a suggestion", () => {
   assert.equal(issue.suggest?.zh.includes("h1"), true);
 });
 
+test("a host rejected for its own bad field is still a known host for its panes", () => {
+  const bad = {
+    ...minimal,
+    hosts: [{ id: "h1", role: "笔记本", ghostHost: 1 }],
+    tasks: [{ ...minimal.tasks[0], sneakyKey: 2 }],
+  };
+  const result = parse(bad);
+  assert.equal(result.ok, false);
+  if (result.ok) return;
+  // The host and task ARE in the file; they just failed their own checks. Saying
+  // "找不到主机「h1」" contradicts the error above it and sends the author hunting
+  // for a typo that does not exist.
+  assert.equal(
+    result.errors.some((e) => e.code === "bad_reference"),
+    false,
+    `unexpected dangling-reference errors: ${JSON.stringify(result.errors)}`,
+  );
+  assert.equal(result.errors.filter((e) => e.code === "unknown_field").length, 2);
+});
+
+test("the roster of known hosts lists ids even when every host failed validation", () => {
+  const bad = {
+    ...minimal,
+    hosts: [{ id: "h1", role: "笔记本", ghostHost: 1 }],
+    panes: [{ host: "h3", task: "t1" }],
+  };
+  const result = parse(bad);
+  assert.equal(result.ok, false);
+  if (result.ok) return;
+  const issue = result.errors.find((e) => e.code === "bad_reference");
+  assert.ok(issue);
+  assert.match(issue.zh, /h1/);
+  assert.equal(issue.zh.includes("主机有：。"), false, issue.zh);
+});
+
+test("a task rejected for its own bad field is still a known task for its panes", () => {
+  const brokenTask = { ...minimal, tasks: [{ ...minimal.tasks[0], sneakyKey: 2 }] };
+  const referenced = parse({ ...brokenTask, panes: [{ host: "h1", task: "t1" }] });
+  assert.equal(referenced.ok, false);
+  if (referenced.ok) return;
+  assert.equal(
+    referenced.errors.some((e) => e.code === "bad_reference"),
+    false,
+    `unexpected dangling-reference errors: ${JSON.stringify(referenced.errors)}`,
+  );
+
+  const roster = parse({ ...brokenTask, panes: [{ host: "h1", task: "t9" }] });
+  assert.equal(roster.ok, false);
+  if (roster.ok) return;
+  const issue = roster.errors.find((e) => e.code === "bad_reference");
+  assert.ok(issue);
+  assert.match(issue.zh, /t1/);
+  assert.equal(issue.zh.includes("任务有：。"), false, issue.zh);
+});
+
 test("a misspelled kill warns but still imports, with kill appended", () => {
   const typo = {
     ...minimal,

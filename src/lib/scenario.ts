@@ -238,6 +238,33 @@ function nearest(needle: string, options: string[]): string | undefined {
   return options.find((candidate) => candidate !== needle && editDistance(needle, candidate) <= 2);
 }
 
+/**
+ * Ids as the file declares them, before per-item validation. Per-item validation drops a bad host or
+ * task from the normalized list, but the author still wrote it — so a pane pointing at one of those
+ * ids is not a dangling reference, and the "what's in this file" roster should show the raw ids.
+ */
+function declaredIds(entries: unknown[], key: string): string[] {
+  const ids: string[] = [];
+  for (const entry of entries) {
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) continue;
+    const value = (entry as Record<string, unknown>)[key];
+    if (typeof value === "string" && value) ids.push(value);
+  }
+  return ids;
+}
+
+function roster(ids: string[], zhKind: string, enKind: string): { zh: string; en: string } {
+  return ids.length
+    ? {
+        zh: `本剧本的${zhKind}有：${ids.join("、")}。`,
+        en: `This scenario defines: ${ids.join(", ")}.`,
+      }
+    : {
+        zh: `这份文件里没有写出可读的${zhKind} id。`,
+        en: `No readable ${enKind} id in this file.`,
+      };
+}
+
 function editDistance(a: string, b: string): number {
   const prev = Array.from({ length: b.length + 1 }, (_, i) => i);
   for (let i = 1; i <= a.length; i += 1) {
@@ -441,6 +468,8 @@ export function parseScenario(text: string): ParseResult {
 
   const panes: ScenarioPane[] = [];
   const perHost = new Map<string, number>();
+  const declaredHostIds = declaredIds(file.hosts, "id");
+  const declaredTaskIds = declaredIds(file.tasks, "key");
   file.panes.forEach((entry, i) => {
     const parsed = paneSchema.safeParse(entry);
     if (!parsed.success) {
@@ -450,26 +479,30 @@ export function parseScenario(text: string): ParseResult {
     }
     const at = `panes[${i}]`;
     const d = parsed.data;
-    if (!hostIds.includes(d.host)) {
-      const hint = nearest(d.host, hostIds);
+    // An id the author wrote but that failed its own item check is already reported above; calling the
+    // reference dangling on top of that contradicts the line the author needs to fix.
+    if (!hostIds.includes(d.host) && !declaredHostIds.includes(d.host)) {
+      const hint = nearest(d.host, declaredHostIds);
+      const known = roster(declaredHostIds, "主机", "host");
       issues.push(
         err(
           "bad_reference",
           `${at}.host`,
-          `找不到主机「${d.host}」。本剧本的主机有：${hostIds.join("、")}。`,
-          `Unknown host "${d.host}". This scenario defines: ${hostIds.join(", ")}.`,
+          `找不到主机「${d.host}」。${known.zh}`,
+          `Unknown host "${d.host}". ${known.en}`,
           hint ? { zh: `是否想写「${hint}」？`, en: `Did you mean "${hint}"?` } : undefined,
         ),
       );
     }
-    if (!seenTasks.has(d.task)) {
-      const hint = nearest(d.task, [...seenTasks]);
+    if (!seenTasks.has(d.task) && !declaredTaskIds.includes(d.task)) {
+      const hint = nearest(d.task, declaredTaskIds);
+      const known = roster(declaredTaskIds, "任务", "task");
       issues.push(
         err(
           "bad_reference",
           `${at}.task`,
-          `找不到任务「${d.task}」。本剧本的任务有：${[...seenTasks].join("、")}。`,
-          `Unknown task "${d.task}". This scenario defines: ${[...seenTasks].join(", ")}.`,
+          `找不到任务「${d.task}」。${known.zh}`,
+          `Unknown task "${d.task}". ${known.en}`,
           hint ? { zh: `是否想写「${hint}」？`, en: `Did you mean "${hint}"?` } : undefined,
         ),
       );
